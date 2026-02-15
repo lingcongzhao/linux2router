@@ -1,0 +1,6 @@
+{{define "table_options"}}
+<option value="">Select table...</option>
+{{range .Tables}}
+<option value="{{.Name}}">{{.Name}} ({{.ID}})</option>
+{{end}}
+{{end}}

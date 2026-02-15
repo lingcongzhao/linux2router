@@ -1,0 +1,89 @@
+{{define "rule_table"}}
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">Active IP Rules</h3>
+    </div>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Priority</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>FWMark</th>
+                        <th>IIF</th>
+                        <th>OIF</th>
+                        <th>Action/Table</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Rules}}
+                    <tr>
+                        <td class="font-medium text-gray-900">{{.Priority}}</td>
+                        <td class="mono">{{if .From}}{{.From}}{{else}}all{{end}}</td>
+                        <td class="mono">{{if .To}}{{.To}}{{else}}-{{end}}</td>
+                        <td class="mono">{{if .FWMark}}{{.FWMark}}{{else}}-{{end}}</td>
+                        <td>{{if .IIF}}{{.IIF}}{{else}}-{{end}}</td>
+                        <td>{{if .OIF}}{{.OIF}}{{else}}-{{end}}</td>
+                        <td>
+                            {{if .Table}}
+                            <span class="badge badge-blue">lookup {{.Table}}</span>
+                            {{else if .Action}}
+                            <span class="badge badge-yellow">{{.Action}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if and (ne .Priority 0) (ne .Priority 32766) (ne .Priority 32767)}}
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="showConfirmModal('Delete rule with priority {{.Priority}}?', '/rules/{{.Priority}}', 'DELETE')">
+                                Delete
+                            </button>
+                            {{else}}
+                            <span class="text-gray-400 text-sm">System rule</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500">No rules configured</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">About IP Rules</h3>
+    </div>
+    <div class="card-body prose prose-sm max-w-none">
+        <p class="text-gray-600">
+            IP rules implement policy-based routing (PBR), allowing you to route traffic based on source address,
+            destination address, firewall marks, or interfaces - not just destination as with traditional routing.
+        </p>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-3 rounded">
+                <h4 class="font-medium text-gray-900">System Rules (Protected)</h4>
+                <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                    <li><strong>0:</strong> local - Handles localhost and local addresses</li>
+                    <li><strong>32766:</strong> main - Standard routing table</li>
+                    <li><strong>32767:</strong> default - Last resort routes</li>
+                </ul>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <h4 class="font-medium text-gray-900">Common Use Cases</h4>
+                <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                    <li>Route specific source IPs through VPN</li>
+                    <li>Use different ISPs for different subnets</li>
+                    <li>Mark packets with iptables, route by mark</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,158 @@
+{{define "dashboard_stats"}}
+<!-- System Info Cards -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div class="stat-card">
+        <dt class="stat-card-title">Hostname</dt>
+        <dd class="stat-card-value text-xl">{{.Dashboard.SystemInfo.Hostname}}</dd>
+    </div>
+    <div class="stat-card">
+        <dt class="stat-card-title">Uptime</dt>
+        <dd class="stat-card-value text-xl">{{.Dashboard.SystemInfo.Uptime}}</dd>
+    </div>
+    <div class="stat-card">
+        <dt class="stat-card-title">Load Average</dt>
+        <dd class="stat-card-value text-xl">{{.Dashboard.SystemInfo.LoadAverage}}</dd>
+    </div>
+    <div class="stat-card">
+        <dt class="stat-card-title">Memory</dt>
+        <dd class="stat-card-value text-xl">{{.Dashboard.SystemInfo.MemoryUsed}} / {{.Dashboard.SystemInfo.MemoryTotal}}</dd>
+        <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-indigo-600 h-2 rounded-full" style="width: {{.Dashboard.SystemInfo.MemoryPercent}}%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Network Stats Cards -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+    <div class="stat-card">
+        <dt class="stat-card-title">Network Interfaces</dt>
+        <dd class="stat-card-value">
+            <span class="text-green-600">{{.Dashboard.NetworkStats.ActiveInterfaces}}</span>
+            <span class="text-gray-400 text-lg">/ {{.Dashboard.NetworkStats.TotalInterfaces}}</span>
+        </dd>
+        <p class="text-sm text-gray-500 mt-1">active / total</p>
+    </div>
+    <div class="stat-card">
+        <dt class="stat-card-title">Total RX</dt>
+        <dd class="stat-card-value">{{formatBytes .Dashboard.NetworkStats.TotalRxBytes}}</dd>
+    </div>
+    <div class="stat-card">
+        <dt class="stat-card-title">Total TX</dt>
+        <dd class="stat-card-value">{{formatBytes .Dashboard.NetworkStats.TotalTxBytes}}</dd>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <a href="/interfaces" class="card hover:shadow-md transition-shadow">
+        <div class="card-body flex items-center">
+            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-900">Interfaces</p>
+                <p class="text-sm text-gray-500">Manage network interfaces</p>
+            </div>
+        </div>
+    </a>
+    <a href="/firewall" class="card hover:shadow-md transition-shadow">
+        <div class="card-body flex items-center">
+            <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-900">Firewall</p>
+                <p class="text-sm text-gray-500">Manage iptables rules</p>
+            </div>
+        </div>
+    </a>
+    <a href="/routes" class="card hover:shadow-md transition-shadow">
+        <div class="card-body flex items-center">
+            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-900">Routes</p>
+                <p class="text-sm text-gray-500">Manage routing tables</p>
+            </div>
+        </div>
+    </a>
+    <a href="/rules" class="card hover:shadow-md transition-shadow">
+        <div class="card-body flex items-center">
+            <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-900">IP Rules</p>
+                <p class="text-sm text-gray-500">Policy-based routing</p>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Interface Overview Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">Interface Overview</h3>
+    </div>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Interface</th>
+                        <th>Status</th>
+                        <th>IPv4 Address</th>
+                        <th>RX</th>
+                        <th>TX</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Dashboard.Interfaces}}
+                    <tr>
+                        <td class="font-medium text-gray-900">{{.Name}}</td>
+                        <td>
+                            {{if eq .State "UP"}}
+                            <span class="badge badge-green">UP</span>
+                            {{else}}
+                            <span class="badge badge-red">DOWN</span>
+                            {{end}}
+                        </td>
+                        <td class="mono">{{if .IPv4}}{{.IPv4}}{{else}}-{{end}}</td>
+                        <td class="mono">{{.RxBytes}}</td>
+                        <td class="mono">{{.TxBytes}}</td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="5" class="text-center text-gray-500">No interfaces found</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- System Info -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">System Information</h3>
+    </div>
+    <div class="card-body">
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">Kernel Version</dt>
+                <dd class="mt-1 text-sm text-gray-900 mono">{{.Dashboard.SystemInfo.KernelVersion}}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+{{end}}

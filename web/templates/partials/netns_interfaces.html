@@ -1,0 +1,75 @@
+{{define "netns_interfaces"}}
+{{if .Interfaces}}
+<table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Addresses</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAC</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MTU</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+        {{range .Interfaces}}
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="font-medium text-gray-900 font-mono">{{.Name}}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{if eq .Type "veth"}}
+                <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">veth</span>
+                {{else if eq .Type "wireguard"}}
+                <span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800">wireguard</span>
+                {{else if eq .Type "bridge"}}
+                <span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-800">bridge</span>
+                {{else if eq .Type "vxlan"}}
+                <span class="px-2 py-1 text-xs rounded bg-cyan-100 text-cyan-800">vxlan</span>
+                {{else}}
+                <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">{{.Type}}</span>
+                {{end}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                {{if eq .State "UP"}}
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">UP</span>
+                {{else}}
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">DOWN</span>
+                {{end}}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+                {{if .Addresses}}
+                <div class="space-y-1">
+                    {{range .Addresses}}
+                    <span class="block font-mono text-xs">{{.}}</span>
+                    {{end}}
+                </div>
+                {{else}}
+                <span class="text-gray-400">No addresses</span>
+                {{end}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                {{if .MAC}}{{.MAC}}{{else}}-{{end}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{.MTU}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                {{if eq .State "UP"}}
+                <button hx-post="/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}/down" hx-target="#alert-container" class="text-yellow-600 hover:text-yellow-900 mr-3">Down</button>
+                {{else}}
+                <button hx-post="/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}/up" hx-target="#alert-container" class="text-green-600 hover:text-green-900 mr-3">Up</button>
+                {{end}}
+                <button onclick="showConfirmModal('Remove Interface', 'Move {{.Name}} back to default namespace?', '/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}')" class="text-red-600 hover:text-red-900">Remove</button>
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{else}}
+<div class="px-6 py-8 text-center text-sm text-gray-500">
+    No interfaces in this namespace. Click "Add Interface" to move one from the default namespace.
+</div>
+{{end}}
+{{end}}

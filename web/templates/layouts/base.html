@@ -1,0 +1,29 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Linux Router</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <script src="/static/js/app.js"></script>
+</head>
+<body class="h-full" hx-boost="true">
+    <div class="min-h-full">
+        {{if .User}}
+        {{template "nav" .}}
+        {{end}}
+
+        <main class="{{if .User}}py-6{{end}}">
+            <div class="{{if .User}}mx-auto max-w-7xl px-4 sm:px-6 lg:px-8{{end}}">
+                {{template "content" .}}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}

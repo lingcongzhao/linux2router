@@ -1,0 +1,56 @@
+{{define "ipset_table"}}
+<div class="card">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Family</th>
+                    <th>Entries</th>
+                    <th>References</th>
+                    <th>Memory</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Sets}}
+                <tr>
+                    <td>
+                        <a href="/ipset/{{.Name}}" class="text-indigo-600 hover:text-indigo-900 font-medium">
+                            {{.Name}}
+                        </a>
+                    </td>
+                    <td class="text-sm text-gray-600">{{.Type}}</td>
+                    <td class="text-sm text-gray-600">{{.Family}}</td>
+                    <td class="text-sm">{{.NumEntries}}</td>
+                    <td class="text-sm">
+                        {{if gt .References 0}}
+                        <span class="badge badge-blue">{{.References}}</span>
+                        {{else}}
+                        <span class="text-gray-400">0</span>
+                        {{end}}
+                    </td>
+                    <td class="text-sm text-gray-600">{{formatBytes (uint64 .MemSize)}}</td>
+                    <td class="text-right space-x-1">
+                        <a href="/ipset/{{.Name}}" class="btn btn-sm btn-info">View</a>
+                        <button class="btn btn-sm btn-warning"
+                                onclick="showConfirmModal('Flush all entries from {{.Name}}?', '/ipset/{{.Name}}/flush', 'POST')">
+                            Flush
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                                onclick="showConfirmModal('Delete IP set {{.Name}}?{{if gt .References 0}} Warning: This set is referenced by iptables rules!{{end}}', '/ipset/{{.Name}}', 'DELETE')">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="7" class="text-center text-gray-500">No IP sets defined</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

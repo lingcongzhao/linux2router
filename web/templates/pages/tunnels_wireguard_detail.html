@@ -1,0 +1,283 @@
+{{define "tunnels_wireguard_detail.html"}}
+{{template "base" .}}
+{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="/tunnels/wireguard" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{.Tunnel.Name}}</h1>
+                <p class="mt-1 text-sm text-gray-500">WireGuard Interface Configuration</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            {{if eq .Tunnel.State "UP"}}
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">UP</span>
+            {{else}}
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">DOWN</span>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
+
+    <!-- Interface Info -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-medium text-gray-900">Interface Details</h2>
+            <button onclick="document.getElementById('editInterfaceModal').classList.remove('hidden')" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit
+            </button>
+        </div>
+        <div class="px-6 py-4">
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Public Key</dt>
+                    <dd class="mt-1 text-sm text-gray-900 font-mono break-all">{{.Tunnel.PublicKey}}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Listen Port</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{if .Tunnel.ListenPort}}{{.Tunnel.ListenPort}}{{else}}Not set{{end}}</dd>
+                </div>
+                <div class="md:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500 flex items-center justify-between">
+                        <span>Addresses</span>
+                        <button onclick="document.getElementById('addAddressModal').classList.remove('hidden')" class="text-xs text-indigo-600 hover:text-indigo-500">+ Add</button>
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 font-mono">
+                        {{if .Tunnel.Addresses}}
+                            {{range .Tunnel.Addresses}}
+                            <div class="flex items-center justify-between py-1">
+                                <span>{{.}}</span>
+                                <button onclick="showConfirmModal('Remove Address', 'Remove address {{.}} from interface?', '/tunnels/wireguard/{{$.Tunnel.Name}}/addresses?address={{urlquery .}}')" class="text-xs text-red-600 hover:text-red-500">Remove</button>
+                            </div>
+                            {{end}}
+                        {{else}}No addresses assigned{{end}}
+                    </dd>
+                </div>
+                {{if .Tunnel.FwMark}}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Firewall Mark</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{.Tunnel.FwMark}}</dd>
+                </div>
+                {{end}}
+            </dl>
+        </div>
+    </div>
+
+    <!-- Peers Section -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-medium text-gray-900">Peers ({{len .Tunnel.Peers}})</h2>
+            <button onclick="document.getElementById('addPeerModal').classList.remove('hidden')" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Peer
+            </button>
+        </div>
+        <div id="peers-table" hx-get="/tunnels/wireguard/{{.Tunnel.Name}}/peers" hx-trigger="load, refresh from:body, every 10s" hx-swap="innerHTML">
+            {{template "wireguard_peers" .}}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Interface Modal -->
+<div id="editInterfaceModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Edit Interface</h3>
+            <button onclick="document.getElementById('editInterfaceModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form hx-put="/tunnels/wireguard/{{.Tunnel.Name}}" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) { document.getElementById('editInterfaceModal').classList.add('hidden'); setTimeout(function(){location.reload();}, 500); }">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Listen Port</label>
+                    <input type="number" name="listen_port" value="{{.Tunnel.ListenPort}}" placeholder="51820" min="1" max="65535" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">UDP port for listening (leave empty for random)</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('editInterfaceModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Address Modal -->
+<div id="addAddressModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Add Address</h3>
+            <button onclick="document.getElementById('addAddressModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form hx-post="/tunnels/wireguard/{{.Tunnel.Name}}/addresses" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) { document.getElementById('addAddressModal').classList.add('hidden'); setTimeout(function(){location.reload();}, 500); }">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">IP Address (CIDR)</label>
+                    <input type="text" name="address" required placeholder="10.0.0.1/24" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">IP address in CIDR notation (e.g., 10.0.0.1/24)</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('addAddressModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Add Address</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Peer Modal -->
+<div id="addPeerModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Add Peer</h3>
+            <button onclick="document.getElementById('addPeerModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form hx-post="/tunnels/wireguard/{{.Tunnel.Name}}/peers" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) document.getElementById('addPeerModal').classList.add('hidden')">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Public Key</label>
+                    <input type="text" name="public_key" required placeholder="Peer's public key" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border font-mono">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Endpoint (Optional)</label>
+                    <input type="text" name="endpoint" placeholder="192.168.1.1:51820" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">IP:Port of the peer (for initiating connections)</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Allowed IPs</label>
+                    <input type="text" name="allowed_ips" required placeholder="10.0.0.2/32, 192.168.2.0/24" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">Comma-separated list of allowed IP ranges</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Preshared Key (Optional)</label>
+                    <input type="text" name="preshared_key" placeholder="Optional PSK for additional security" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border font-mono text-xs">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Persistent Keepalive (seconds)</label>
+                    <input type="number" name="persistent_keepalive" placeholder="25" min="0" max="65535" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">Send keepalive every N seconds (useful for NAT traversal)</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('addPeerModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Add Peer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Peer Modal -->
+<div id="editPeerModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Edit Peer</h3>
+            <button onclick="document.getElementById('editPeerModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form hx-put="/tunnels/wireguard/{{.Tunnel.Name}}/peers" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) document.getElementById('editPeerModal').classList.add('hidden')">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Public Key</label>
+                    <input type="text" name="public_key" id="editPeerPublicKey" readonly class="mt-1 block w-full rounded-md bg-gray-50 border-gray-300 shadow-sm text-sm px-3 py-2 border font-mono text-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Endpoint</label>
+                    <input type="text" name="endpoint" id="editPeerEndpoint" placeholder="192.168.1.1:51820" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">IP:Port of the peer (leave empty to clear)</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Allowed IPs</label>
+                    <input type="text" name="allowed_ips" id="editPeerAllowedIPs" required placeholder="10.0.0.2/32, 192.168.2.0/24" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">Comma-separated list of allowed IP ranges</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Persistent Keepalive (seconds)</label>
+                    <input type="number" name="persistent_keepalive" id="editPeerKeepalive" placeholder="0" min="0" max="65535" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">Set to 0 to disable keepalive</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('editPeerModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-medium text-gray-900 mb-4" id="confirmTitle">Confirm Action</h3>
+        <p class="text-sm text-gray-500 mb-6" id="confirmMessage">Are you sure?</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button id="confirmBtn" hx-target="#alert-container" onclick="confirmAction()" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var pendingDeleteUrl = null;
+
+function showConfirmModal(title, message, deleteUrl) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    pendingDeleteUrl = deleteUrl;
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function confirmAction() {
+    if (pendingDeleteUrl) {
+        var btn = document.getElementById('confirmBtn');
+        var url = pendingDeleteUrl;
+        pendingDeleteUrl = null;
+        btn.setAttribute('hx-delete', url);
+        htmx.process(btn);
+        htmx.trigger(btn, 'click');
+    }
+    document.getElementById('confirmModal').classList.add('hidden');
+}
+
+function openEditPeerModal(publicKey, endpoint, allowedIPs, keepalive) {
+    document.getElementById('editPeerPublicKey').value = publicKey;
+    document.getElementById('editPeerEndpoint').value = endpoint || '';
+    document.getElementById('editPeerAllowedIPs').value = allowedIPs || '';
+    document.getElementById('editPeerKeepalive').value = keepalive || 0;
+    document.getElementById('editPeerModal').classList.remove('hidden');
+}
+
+// Listen for refresh event to reload page when addresses are modified
+document.body.addEventListener('refresh', function() {
+    setTimeout(function() { location.reload(); }, 300);
+});
+</script>
+{{end}}

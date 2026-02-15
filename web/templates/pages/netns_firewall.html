@@ -1,0 +1,241 @@
+{{define "netns_firewall.html"}}
+{{template "base" .}}
+{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1 flex items-center space-x-4">
+            <a href="/netns/{{.Namespace.Name}}" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+            <div>
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    Iptables - {{.Namespace.Name}}
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">Firewall rules in namespace {{.Namespace.Name}}</p>
+            </div>
+        </div>
+        <div class="mt-4 flex md:ml-4 md:mt-0 space-x-2">
+            <button class="btn btn-info" onclick="document.getElementById('add-chain-modal').classList.remove('hidden')">
+                + New Chain
+            </button>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <!-- Table Selection -->
+    <div class="card">
+        <div class="card-body">
+            <div class="flex flex-wrap gap-2 items-center">
+                {{range .Tables}}
+                <a href="/netns/{{$.Namespace.Name}}/firewall?table={{.}}"
+                   class="px-4 py-2 rounded-md text-sm font-medium {{if eq . $.Table}}bg-indigo-600 text-white{{else}}bg-gray-100 text-gray-700 hover:bg-gray-200{{end}}">
+                    {{.}}
+                </a>
+                {{end}}
+
+                <!-- Chain Selector -->
+                {{if .Chains}}
+                <span class="mx-4 text-gray-400">|</span>
+                <label class="text-sm text-gray-600">View Chain:</label>
+                <select id="chain-select" onchange="if(this.value) { window.location.href='/netns/{{.Namespace.Name}}/firewall?table={{.Table}}&chain='+encodeURIComponent(this.value); } else { window.location.href='/netns/{{.Namespace.Name}}/firewall?table={{.Table}}'; }" class="form-select text-sm py-1" style="width: auto;">
+                    <option value="">-- All System Chains --</option>
+                    {{range .Chains}}
+                    <option value="{{.Name}}" {{if eq .Name $.SelectedChainName}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Chains -->
+    <div id="firewall-content"
+         hx-get="/netns/{{.Namespace.Name}}/firewall/rules?table={{.Table}}{{if .SelectedChainName}}&chain={{.SelectedChainName}}{{end}}"
+         hx-trigger="every 10s, refresh from:body"
+         hx-swap="innerHTML">
+        {{template "netns_firewall_table" .}}
+    </div>
+
+    <!-- Add Rule Modal -->
+    <div id="add-rule-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('add-rule-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
+                <div class="absolute right-0 top-0 pr-4 pt-4">
+                    <button type="button" onclick="document.getElementById('add-rule-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Add Firewall Rule</h3>
+                <form hx-post="/netns/{{.Namespace.Name}}/firewall/rules" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => { document.getElementById('add-rule-modal').classList.add('hidden'); htmx.trigger('#firewall-content', 'refresh'); }, 100)">
+                    <input type="hidden" name="table" id="rule-table" value="{{.Table}}">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">Chain</label>
+                            <select name="chain" id="rule-chain" required class="form-select">
+                                {{range .Chains}}
+                                <option value="{{.Name}}">{{.Name}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Position (optional)</label>
+                            <input type="number" name="position" min="1" class="form-input" placeholder="End of chain">
+                        </div>
+                        <div>
+                            <label class="form-label">Protocol</label>
+                            <select name="protocol" class="form-select">
+                                <option value="all">All</option>
+                                <option value="tcp">TCP</option>
+                                <option value="udp">UDP</option>
+                                <option value="icmp">ICMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Target</label>
+                            <select name="target" required class="form-select">
+                                <option value="ACCEPT">ACCEPT</option>
+                                <option value="DROP">DROP</option>
+                                <option value="REJECT">REJECT</option>
+                                <option value="LOG">LOG</option>
+                                <option value="MARK">MARK</option>
+                                <option value="MASQUERADE">MASQUERADE</option>
+                                <option value="SNAT">SNAT</option>
+                                <option value="DNAT">DNAT</option>
+                                <option value="RETURN">RETURN</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Source</label>
+                            <input type="text" name="source" class="form-input" placeholder="0.0.0.0/0">
+                        </div>
+                        <div>
+                            <label class="form-label">Destination</label>
+                            <input type="text" name="destination" class="form-input" placeholder="0.0.0.0/0">
+                        </div>
+                        <div>
+                            <label class="form-label">Source Port</label>
+                            <input type="text" name="sport" class="form-input" placeholder="Any">
+                        </div>
+                        <div>
+                            <label class="form-label">Destination Port</label>
+                            <input type="text" name="dport" class="form-input" placeholder="Any">
+                        </div>
+                        <div>
+                            <label class="form-label">In Interface</label>
+                            <input type="text" name="in_interface" class="form-input" placeholder="Any">
+                        </div>
+                        <div>
+                            <label class="form-label">Out Interface</label>
+                            <input type="text" name="out_interface" class="form-input" placeholder="Any">
+                        </div>
+                        <div>
+                            <label class="form-label">Connection State</label>
+                            <select name="state" class="form-select">
+                                <option value="">Any</option>
+                                <option value="NEW">NEW</option>
+                                <option value="ESTABLISHED">ESTABLISHED</option>
+                                <option value="RELATED">RELATED</option>
+                                <option value="ESTABLISHED,RELATED">ESTABLISHED,RELATED</option>
+                                <option value="NEW,ESTABLISHED,RELATED">NEW,ESTABLISHED,RELATED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Comment</label>
+                            <input type="text" name="comment" class="form-input" placeholder="Optional">
+                        </div>
+                        <div class="col-span-2 border-t pt-4 mt-2">
+                            <p class="text-sm text-gray-500 mb-2">NAT Options (for DNAT/SNAT targets)</p>
+                        </div>
+                        <div>
+                            <label class="form-label">To Destination (DNAT)</label>
+                            <input type="text" name="to_destination" class="form-input" placeholder="192.168.1.100:80">
+                        </div>
+                        <div>
+                            <label class="form-label">To Source (SNAT)</label>
+                            <input type="text" name="to_source" class="form-input" placeholder="203.0.113.1">
+                        </div>
+                        <div class="col-span-2 border-t pt-4 mt-2">
+                            <p class="text-sm text-gray-500 mb-2">Packet Marking (for MARK target, use with mangle table)</p>
+                        </div>
+                        <div>
+                            <label class="form-label">Mark Value</label>
+                            <input type="text" name="mark" class="form-input" placeholder="e.g., 100 or 0x64">
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mt-2">Use MARK target with mangle table to mark packets for policy routing</p>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('add-rule-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Rule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Chain Modal -->
+    <div id="add-chain-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('add-chain-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Create New Chain</h3>
+                <form hx-post="/netns/{{.Namespace.Name}}/firewall/chains" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => { document.getElementById('add-chain-modal').classList.add('hidden'); location.reload(); }, 100)">
+                    <input type="hidden" name="table" value="{{.Table}}">
+                    <div class="mb-4">
+                        <label class="form-label">Chain Name</label>
+                        <input type="text" name="chain" required class="form-input" pattern="[A-Za-z0-9_-]+" placeholder="MY_CHAIN">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('add-chain-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75" onclick="closeConfirmModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold leading-6 text-gray-900">Confirm Action</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500" id="confirm-modal-message">Are you sure?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirm-modal-yes" onclick="confirmAction()" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">
+                    Confirm
+                </button>
+                <button type="button" onclick="closeConfirmModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All JS functions are in /static/js/app.js (global) -->
+{{end}}

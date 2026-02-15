@@ -1,0 +1,18 @@
+{{define "ip_forwarding_toggle"}}
+<div class="flex items-center space-x-3" id="ip-forwarding-container">
+    <span class="text-sm text-gray-600">IP Forwarding:</span>
+    <button hx-post="/routes/forwarding/toggle"
+            hx-target="#ip-forwarding-container"
+            hx-swap="outerHTML"
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 {{if .IPForwarding}}bg-green-500{{else}}bg-gray-200{{end}}"
+            role="switch"
+            aria-checked="{{.IPForwarding}}"
+            title="{{if .IPForwarding}}Click to disable IP forwarding{{else}}Click to enable IP forwarding{{end}}">
+        <span class="sr-only">IP Forwarding</span>
+        <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{if .IPForwarding}}translate-x-5{{else}}translate-x-0{{end}}"></span>
+    </button>
+    <span class="text-sm font-medium {{if .IPForwarding}}text-green-600{{else}}text-gray-500{{end}}">
+        {{if .IPForwarding}}Enabled{{else}}Disabled{{end}}
+    </span>
+</div>
+{{end}}

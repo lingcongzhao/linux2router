@@ -1,0 +1,8 @@
+create test_ipset_net hash:net family inet hashsize 1024 maxelem 65536 bucketsize 12 initval 0xcfb16d2c
+add test_ipset_net 192.168.2.0/24
+add test_ipset_net 192.168.1.0/24
+add test_ipset_net 192.168.3.0/24
+create test_ips hash:ip family inet hashsize 1024 maxelem 65536 bucketsize 12 initval 0x1e741683
+add test_ips 192.168.1.200
+add test_ips 10.0.0.1
+add test_ips 192.168.1.100

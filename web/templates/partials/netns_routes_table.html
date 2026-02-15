@@ -1,0 +1,58 @@
+{{define "netns_routes_table"}}
+{{$namespaceName := .NamespaceName}}
+{{$currentTable := .CurrentTable}}
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">Table: {{.CurrentTable}}</h3>
+    </div>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Destination</th>
+                        <th>Gateway</th>
+                        <th>Interface</th>
+                        <th>Protocol</th>
+                        <th>Scope</th>
+                        <th>Metric</th>
+                        <th>Source</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Routes}}
+                    <tr>
+                        <td class="font-medium text-gray-900 mono">{{.Destination}}</td>
+                        <td class="mono">{{if .Gateway}}{{.Gateway}}{{else}}-{{end}}</td>
+                        <td>{{if .Interface}}{{.Interface}}{{else}}-{{end}}</td>
+                        <td>
+                            {{if .Protocol}}
+                            <span class="badge badge-gray">{{.Protocol}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{if .Scope}}{{.Scope}}{{else}}-{{end}}</td>
+                        <td>{{if gt .Metric 0}}{{.Metric}}{{else}}-{{end}}</td>
+                        <td class="mono text-xs">{{if .Source}}{{.Source}}{{else}}-{{end}}</td>
+                        <td>
+                            {{if ne .Protocol "kernel"}}
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    onclick="showConfirmModal('Delete route to {{.Destination}}?', '/netns/{{$namespaceName}}/routes?destination={{.Destination}}&gateway={{.Gateway}}&interface={{.Interface}}&table={{$currentTable}}', 'DELETE')">
+                                Delete
+                            </button>
+                            {{else}}
+                            <span class="text-gray-400 text-sm">System route</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500">No routes in this table</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{end}}

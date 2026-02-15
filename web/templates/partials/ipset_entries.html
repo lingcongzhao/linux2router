@@ -1,0 +1,35 @@
+{{define "ipset_entries"}}
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">Entries ({{len .Set.Entries}})</h3>
+    </div>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Entry</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{$setName := .Set.Name}}
+                {{range .Set.Entries}}
+                <tr>
+                    <td class="mono">{{.}}</td>
+                    <td class="text-right">
+                        <button class="btn btn-sm btn-danger"
+                                onclick="showConfirmModal('Delete entry {{.}}?', '/ipset/{{$setName}}/entries', 'DELETE', 'entry={{.}}')">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="2" class="text-center text-gray-500">No entries in this set</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,74 @@
+{{define "wireguard_peers"}}
+{{if .Tunnel.Peers}}
+<div class="divide-y divide-gray-200">
+    {{range .Tunnel.Peers}}
+    <div class="px-6 py-4">
+        <div class="flex justify-between items-start">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-900">Peer</span>
+                    {{if .LatestHandshake}}
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">Connected</span>
+                    {{else}}
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">No handshake</span>
+                    {{end}}
+                </div>
+                <dl class="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2">
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Public Key</dt>
+                        <dd class="text-sm text-gray-900 font-mono break-all">{{.PublicKey}}</dd>
+                    </div>
+                    {{if .Endpoint}}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Endpoint</dt>
+                        <dd class="text-sm text-gray-900 font-mono">{{.Endpoint}}</dd>
+                    </div>
+                    {{end}}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Allowed IPs</dt>
+                        <dd class="text-sm text-gray-900 font-mono">
+                            {{range $i, $ip := .AllowedIPs}}{{if $i}}, {{end}}{{$ip}}{{end}}
+                        </dd>
+                    </div>
+                    {{if .LatestHandshake}}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Latest Handshake</dt>
+                        <dd class="text-sm text-gray-900">{{.LatestHandshake}}</dd>
+                    </div>
+                    {{end}}
+                    {{if or .TransferRx .TransferTx}}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Transfer</dt>
+                        <dd class="text-sm text-gray-900">
+                            <span class="text-green-600">↓ {{formatBytes .TransferRx}}</span>
+                            <span class="mx-1">/</span>
+                            <span class="text-blue-600">↑ {{formatBytes .TransferTx}}</span>
+                        </dd>
+                    </div>
+                    {{end}}
+                    {{if .PersistentKeepalive}}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500">Keepalive</dt>
+                        <dd class="text-sm text-gray-900">every {{.PersistentKeepalive}}s</dd>
+                    </div>
+                    {{end}}
+                </dl>
+            </div>
+            <div class="ml-4 flex flex-col space-y-1">
+                <button onclick="openEditPeerModal('{{.PublicKey}}', '{{.Endpoint}}', '{{range $i, $ip := .AllowedIPs}}{{if $i}}, {{end}}{{$ip}}{{end}}', {{.PersistentKeepalive}})" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                    Edit
+                </button>
+                <button onclick="showConfirmModal('Remove Peer', 'Are you sure you want to remove this peer?', '/tunnels/wireguard/{{$.Tunnel.Name}}/peers?public_key={{urlquery .PublicKey}}')" class="text-red-600 hover:text-red-900 text-sm">
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="px-6 py-8 text-center text-sm text-gray-500">
+    No peers configured. Click "Add Peer" to add a WireGuard peer.
+</div>
+{{end}}
+{{end}}

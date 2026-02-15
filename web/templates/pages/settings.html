@@ -1,0 +1,267 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                Settings
+            </h2>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Change Password -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-base font-semibold leading-6 text-gray-900">Change Password</h3>
+            </div>
+            <div class="card-body">
+                <form hx-post="/settings/password" hx-target="#alert-container" hx-swap="innerHTML">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">Current Password</label>
+                            <input type="password" name="current_password" required class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="new_password" required minlength="6" class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" name="confirm_password" required class="form-input">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Configuration Management -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration Management</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-sm text-gray-600 mb-4">
+                    Save all current network configurations (firewall, routes, rules...) to persistent storage.
+                </p>
+                <div class="space-y-4">
+                    <button class="btn btn-success w-full"
+                            hx-post="/settings/save-all"
+                            hx-target="#alert-container"
+                            hx-swap="innerHTML">
+                        Save All Configurations
+                    </button>
+                    <div class="border-t pt-4">
+                        <p class="text-sm text-gray-600 mb-2">Export/Import configuration backup:</p>
+                        <div class="flex space-x-2">
+                            <a href="/settings/export" hx-boost="false" class="btn btn-info flex-1 text-center">
+                                Export Config
+                            </a>
+                            <button type="button" onclick="document.getElementById('import-modal').classList.remove('hidden')"
+                                    class="btn btn-warning flex-1">
+                                Import Config
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{if .User.IsAdmin}}
+    <!-- User Management -->
+    <div class="card">
+        <div class="card-header flex justify-between items-center">
+            <h3 class="text-base font-semibold leading-6 text-gray-900">User Management</h3>
+            <button class="btn btn-info btn-sm" onclick="document.getElementById('add-user-modal').classList.remove('hidden')">
+                + Add User
+            </button>
+        </div>
+        <div class="table-container">
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Users}}
+                        <tr>
+                            <td class="font-medium text-gray-900">{{.Username}}</td>
+                            <td>
+                                {{if .IsAdmin}}
+                                <span class="badge badge-blue">Admin</span>
+                                {{else}}
+                                <span class="badge badge-gray">User</span>
+                                {{end}}
+                            </td>
+                            <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                            <td>
+                                {{if ne .ID $.User.ID}}
+                                <div class="flex space-x-2">
+                                    <button class="btn btn-sm btn-secondary"
+                                            onclick="openEditUserModal({{.ID}}, '{{.Username}}', {{.IsAdmin}})">
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            hx-delete="/settings/users/{{.ID}}"
+                                            hx-target="#alert-container"
+                                            hx-swap="innerHTML"
+                                            data-confirm="Delete user {{.Username}}?">
+                                        Delete
+                                    </button>
+                                </div>
+                                {{else}}
+                                <span class="text-gray-400 text-sm">(current user)</span>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-base font-semibold leading-6 text-gray-900">Audit Log</h3>
+        </div>
+        <div class="table-container">
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .AuditLogs}}
+                        <tr>
+                            <td class="text-xs">{{.CreatedAt.Format "2006-01-02 15:04:05"}}</td>
+                            <td>{{.Username}}</td>
+                            <td>
+                                <span class="badge badge-gray">{{.Action}}</span>
+                            </td>
+                            <td class="text-xs">{{if .Details}}{{.Details}}{{else}}-{{end}}</td>
+                            <td class="mono text-xs">{{.IPAddress}}</td>
+                        </tr>
+                        {{else}}
+                        <tr>
+                            <td colspan="5" class="text-center text-gray-500">No audit logs</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('add-user-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Add User</h3>
+                <form hx-post="/settings/users" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => { document.getElementById('add-user-modal').classList.add('hidden'); location.reload(); }, 100)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" required pattern="[a-zA-Z0-9_-]+" class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" required minlength="6" class="form-input">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_admin" id="is_admin" class="h-4 w-4 rounded border-gray-300 text-indigo-600">
+                            <label for="is_admin" class="ml-2 text-sm text-gray-900">Administrator</label>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('add-user-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('edit-user-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Edit User: <span id="edit-user-name"></span></h3>
+                <form id="edit-user-form" hx-put="" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => { document.getElementById('edit-user-modal').classList.add('hidden'); location.reload(); }, 100)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">New Password (leave empty to keep current)</label>
+                            <input type="password" name="password" minlength="6" class="form-input">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_admin" id="edit_is_admin" class="h-4 w-4 rounded border-gray-300 text-indigo-600">
+                            <label for="edit_is_admin" class="ml-2 text-sm text-gray-900">Administrator</label>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('edit-user-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Config Modal -->
+    <div id="import-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('import-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Import Configuration</h3>
+                <form hx-post="/settings/import" hx-encoding="multipart/form-data" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => document.getElementById('import-modal').classList.add('hidden'), 100)">
+                    <div class="mb-4">
+                        <label class="form-label">Configuration File</label>
+                        <input type="file" name="config" accept=".tar.gz,.tgz,.gz,application/gzip,application/x-gzip,application/x-tar,application/x-compressed-tar" required
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        <p class="mt-1 text-sm text-gray-500">Upload a previously exported configuration archive</p>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('import-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditUserModal(id, username, isAdmin) {
+    document.getElementById('edit-user-name').textContent = username;
+    document.getElementById('edit-user-form').setAttribute('hx-put', '/settings/users/' + id);
+    document.getElementById('edit_is_admin').checked = isAdmin;
+    htmx.process(document.getElementById('edit-user-form'));
+    document.getElementById('edit-user-modal').classList.remove('hidden');
+}
+</script>
+{{end}}
+
+{{template "base" .}}
