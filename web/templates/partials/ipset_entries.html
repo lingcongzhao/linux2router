@@ -19,9 +19,8 @@
                     <td class="text-right">
                         <button class="btn btn-sm btn-danger"
                                 data-confirm-message="Delete entry {{.}}?"
-                                data-confirm-action="/ipset/{{$setName}}/entries"
-                                data-confirm-method="DELETE"
-                                data-confirm-body="entry={{.}}">
+                                data-confirm-action="/ipset/{{$setName}}/entries?entry={{urlquery .}}"
+                                data-confirm-method="DELETE">
                             Delete
                         </button>
                     </td>

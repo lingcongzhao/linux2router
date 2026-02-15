@@ -223,12 +223,14 @@ func (h *IPSetHandler) DeleteEntry(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
 	name := chi.URLParam(r, "name")
 
-	if err := r.ParseForm(); err != nil {
-		h.renderAlert(w, "error", "Invalid form data")
-		return
+	entry := r.URL.Query().Get("entry")
+	if entry == "" {
+		if err := r.ParseForm(); err != nil {
+			h.renderAlert(w, "error", "Invalid form data")
+			return
+		}
+		entry = r.FormValue("entry")
 	}
-
-	entry := r.FormValue("entry")
 	if entry == "" {
 		h.renderAlert(w, "error", "Entry is required")
 		return
