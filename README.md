@@ -11,7 +11,7 @@ A comprehensive web-based GUI application for managing Linux networking on Ubunt
 - **IP Forwarding** - Toggle IPv4 packet forwarding
 
 ### Firewall (iptables)
-- **Tables**: filter, nat, mangle
+- **Tables**: filter, nat, mangle, raw
 - **Chain Management**: Built-in chains (INPUT, OUTPUT, FORWARD, etc.) + custom chains
 - **Rule Operations**: Add, delete, reorder rules with full parameter support
 - **Advanced Features**:

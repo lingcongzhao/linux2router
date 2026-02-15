@@ -34,7 +34,9 @@
                     <td>
                         {{if and (ne .Priority 0) (ne .Priority 32766) (ne .Priority 32767)}}
                         <button class="btn btn-sm btn-danger"
-                                onclick="showConfirmModal('Delete rule with priority {{.Priority}}?', '/netns/{{$namespaceName}}/rules/{{.Priority}}', 'DELETE')">
+                                data-confirm-message="Delete rule with priority {{.Priority}}?"
+                                data-confirm-action="/netns/{{$namespaceName}}/rules/{{.Priority}}"
+                                data-confirm-method="DELETE">
                             Delete
                         </button>
                         {{else}}

@@ -35,7 +35,9 @@
                         <td>
                             {{if ne .Protocol "kernel"}}
                             <button type="button" class="btn btn-sm btn-danger"
-                                    onclick="showConfirmModal('Delete route to {{.Destination}}?', '/routes?destination={{.Destination}}&gateway={{.Gateway}}&interface={{.Interface}}&table={{$.CurrentTable}}', 'DELETE')">
+                                    data-confirm-message="Delete route to {{.Destination}}?"
+                                    data-confirm-action="/routes?destination={{.Destination}}&gateway={{.Gateway}}&interface={{.Interface}}&table={{$.CurrentTable}}"
+                                    data-confirm-method="DELETE">
                                 Delete
                             </button>
                             {{else}}

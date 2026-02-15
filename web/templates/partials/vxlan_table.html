@@ -41,7 +41,10 @@
                 {{else}}
                 <button hx-post="/tunnels/vxlan/{{.Name}}/up" hx-target="#alert-container" class="text-green-600 hover:text-green-900">Up</button>
                 {{end}}
-                <button onclick="showConfirmModal('Delete Tunnel', 'Are you sure you want to delete tunnel {{.Name}}?', '/tunnels/vxlan/{{.Name}}')" class="text-red-600 hover:text-red-900">Delete</button>
+                <button data-confirm-message="Are you sure you want to delete tunnel {{.Name}}?"
+                        data-confirm-action="/tunnels/vxlan/{{.Name}}"
+                        data-confirm-method="DELETE"
+                        class="text-red-600 hover:text-red-900">Delete</button>
             </td>
         </tr>
         {{end}}

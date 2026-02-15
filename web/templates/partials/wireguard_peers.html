@@ -58,7 +58,10 @@
                 <button onclick="openEditPeerModal('{{.PublicKey}}', '{{.Endpoint}}', '{{range $i, $ip := .AllowedIPs}}{{if $i}}, {{end}}{{$ip}}{{end}}', {{.PersistentKeepalive}})" class="text-indigo-600 hover:text-indigo-900 text-sm">
                     Edit
                 </button>
-                <button onclick="showConfirmModal('Remove Peer', 'Are you sure you want to remove this peer?', '/tunnels/wireguard/{{$.Tunnel.Name}}/peers?public_key={{urlquery .PublicKey}}')" class="text-red-600 hover:text-red-900 text-sm">
+                <button data-confirm-message="Are you sure you want to remove this peer?"
+                        data-confirm-action="/tunnels/wireguard/{{$.Tunnel.Name}}/peers?public_key={{urlquery .PublicKey}}"
+                        data-confirm-method="DELETE"
+                        class="text-red-600 hover:text-red-900 text-sm">
                     Remove
                 </button>
             </div>

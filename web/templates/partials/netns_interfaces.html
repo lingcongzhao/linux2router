@@ -61,7 +61,9 @@
                 {{else}}
                 <button hx-post="/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}/up" hx-target="#alert-container" class="text-green-600 hover:text-green-900 mr-3">Up</button>
                 {{end}}
-                <button onclick="showConfirmModal('Remove Interface', 'Move {{.Name}} back to default namespace?', '/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}')" class="text-red-600 hover:text-red-900">Remove</button>
+                <button data-confirm-message="Move {{.Name}} back to default namespace?"
+                        data-confirm-action="/netns/{{$.Namespace.Name}}/interfaces/{{.Name}}"
+                        class="text-red-600 hover:text-red-900">Remove</button>
             </td>
         </tr>
         {{end}}

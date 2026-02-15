@@ -60,7 +60,10 @@
                             {{range .Tunnel.Addresses}}
                             <div class="flex items-center justify-between py-1">
                                 <span>{{.}}</span>
-                                <button onclick="showConfirmModal('Remove Address', 'Remove address {{.}} from interface?', '/tunnels/wireguard/{{$.Tunnel.Name}}/addresses?address={{urlquery .}}')" class="text-xs text-red-600 hover:text-red-500">Remove</button>
+                                <button data-confirm-message="Remove address {{.}} from interface?"
+                                        data-confirm-action="/tunnels/wireguard/{{$.Tunnel.Name}}/addresses?address={{urlquery .}}"
+                                        data-confirm-method="DELETE"
+                                        class="text-xs text-red-600 hover:text-red-500">Remove</button>
                             </div>
                             {{end}}
                         {{else}}No addresses assigned{{end}}
@@ -246,25 +249,16 @@
 </div>
 
 <script>
-var pendingDeleteUrl = null;
-
-function showConfirmModal(title, message, deleteUrl) {
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    pendingDeleteUrl = deleteUrl;
-    document.getElementById('confirmModal').classList.remove('hidden');
-}
-
 function confirmAction() {
-    if (pendingDeleteUrl) {
+    if (pendingAction) {
         var btn = document.getElementById('confirmBtn');
-        var url = pendingDeleteUrl;
-        pendingDeleteUrl = null;
+        var url = pendingAction;
+        pendingAction = null;
         btn.setAttribute('hx-delete', url);
         htmx.process(btn);
         htmx.trigger(btn, 'click');
     }
-    document.getElementById('confirmModal').classList.add('hidden');
+    closeConfirmModal();
 }
 
 function openEditPeerModal(publicKey, endpoint, allowedIPs, keepalive) {

@@ -18,7 +18,10 @@
                     <td class="mono">{{.}}</td>
                     <td class="text-right">
                         <button class="btn btn-sm btn-danger"
-                                onclick="showConfirmModal('Delete entry {{.}}?', '/ipset/{{$setName}}/entries', 'DELETE', 'entry={{.}}')">
+                                data-confirm-message="Delete entry {{.}}?"
+                                data-confirm-action="/ipset/{{$setName}}/entries"
+                                data-confirm-method="DELETE"
+                                data-confirm-body="entry={{.}}">
                             Delete
                         </button>
                     </td>

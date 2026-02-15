@@ -134,25 +134,16 @@
 </div>
 
 <script>
-var pendingDeleteUrl = null;
-
-function showConfirmModal(title, message, deleteUrl) {
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    pendingDeleteUrl = deleteUrl;
-    document.getElementById('confirmModal').classList.remove('hidden');
-}
-
 function confirmAction() {
-    if (pendingDeleteUrl) {
+    if (pendingAction) {
         var btn = document.getElementById('confirmBtn');
-        var url = pendingDeleteUrl;
-        pendingDeleteUrl = null;
+        var url = pendingAction;
+        pendingAction = null;
         btn.setAttribute('hx-delete', url);
         htmx.process(btn);
         htmx.trigger(btn, 'click');
     }
-    document.getElementById('confirmModal').classList.add('hidden');
+    closeConfirmModal();
 }
 </script>
 {{end}}

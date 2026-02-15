@@ -21,7 +21,9 @@
         </div>
         <div class="mt-4 flex md:ml-4 md:mt-0 space-x-2">
             <button class="btn btn-warning"
-                    onclick="showConfirmModal('Flush all entries from {{.Set.Name}}?', '/ipset/{{.Set.Name}}/flush', 'POST')">
+                    data-confirm-message="Flush all entries from {{.Set.Name}}?"
+                    data-confirm-action="/ipset/{{.Set.Name}}/flush"
+                    data-confirm-method="POST">
                 Flush All
             </button>
         </div>
@@ -160,7 +162,10 @@
                     <td class="mono">{{.}}</td>
                     <td class="text-right">
                         <button class="btn btn-sm btn-danger"
-                                onclick="showConfirmModal('Delete entry {{.}}?', '/ipset/{{$setName}}/entries', 'DELETE', 'entry={{.}}')">
+                                data-confirm-message="Delete entry {{.}}?"
+                                data-confirm-action="/ipset/{{$setName}}/entries"
+                                data-confirm-method="DELETE"
+                                data-confirm-body="entry={{.}}">
                             Delete
                         </button>
                     </td>

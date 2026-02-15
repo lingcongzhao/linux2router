@@ -7,19 +7,70 @@ var pendingAction = null;
 var pendingMethod = 'POST';
 var pendingBody = null;
 
+// Event delegation for confirm buttons - works with HTMX content swaps
+document.addEventListener('click', function(event) {
+    var target = event.target.closest('[data-confirm-action]');
+    if (target) {
+        event.preventDefault();
+        var action = target.getAttribute('data-confirm-action');
+        var method = target.getAttribute('data-confirm-method') || 'POST';
+        var body = target.getAttribute('data-confirm-body') || null;
+        var message = target.getAttribute('data-confirm-message') || 'Are you sure?';
+        
+        if (action) {
+            showConfirmModal(message, action, method, body);
+        }
+    }
+});
+
 function showConfirmModal(message, actionUrl, method, body) {
+    // Support both modal patterns:
+    // 1. confirm-modal with confirm-modal-message (standard)
+    // 2. confirmModal with confirmTitle and confirmMessage (custom)
     var msgEl = document.getElementById('confirm-modal-message');
     var modal = document.getElementById('confirm-modal');
-    if (msgEl) msgEl.textContent = message;
-    if (modal) modal.classList.remove('hidden');
+    
+    if (msgEl) {
+        msgEl.textContent = message;
+    } else {
+        // Try custom modal pattern
+        var titleEl = document.getElementById('confirmTitle');
+        var customMsgEl = document.getElementById('confirmMessage');
+        if (titleEl && customMsgEl) {
+            titleEl.textContent = 'Confirm Action';
+            customMsgEl.textContent = message;
+        }
+    }
+    
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        // Try custom modal
+        var customModal = document.getElementById('confirmModal');
+        if (customModal) {
+            customModal.classList.remove('hidden');
+        }
+    }
+    
     pendingAction = actionUrl;
     pendingMethod = method || 'POST';
     pendingBody = body || null;
+    
+    // Also set pendingDeleteUrl for backward compatibility with custom confirmAction implementations
+    window.pendingDeleteUrl = actionUrl;
 }
 
 function closeConfirmModal() {
     var modal = document.getElementById('confirm-modal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+    } else {
+        // Try custom modal
+        var customModal = document.getElementById('confirmModal');
+        if (customModal) {
+            customModal.classList.add('hidden');
+        }
+    }
     pendingAction = null;
     pendingBody = null;
 }

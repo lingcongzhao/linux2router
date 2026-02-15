@@ -34,7 +34,10 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <a href="/netns/{{.Name}}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                <button onclick="showConfirmModal('Delete Namespace', 'Are you sure you want to delete namespace {{.Name}}? All interfaces in this namespace will be lost.', '/netns/{{.Name}}')" class="text-red-600 hover:text-red-900">Delete</button>
+                <button data-confirm-message="Are you sure you want to delete namespace {{.Name}}? All interfaces in this namespace will be lost."
+                        data-confirm-action="/netns/{{.Name}}"
+                        data-confirm-method="DELETE"
+                        class="text-red-600 hover:text-red-900">Delete</button>
             </td>
         </tr>
         {{end}}

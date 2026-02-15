@@ -27,7 +27,9 @@
         <div class="mt-4 flex md:ml-4 md:mt-0 space-x-2">
             {{if eq .Interface.State "UP"}}
             <button class="btn btn-secondary"
-                    onclick="showConfirmModal('Are you sure you want to bring down {{.Interface.Name}}?', '/interfaces/{{.Interface.Name}}/down', 'POST')">
+                    data-confirm-message="Are you sure you want to bring down {{.Interface.Name}}?"
+                    data-confirm-action="/interfaces/{{.Interface.Name}}/down"
+                    data-confirm-method="POST">
                 Bring Down
             </button>
             {{else}}
@@ -142,7 +144,9 @@
                     <li class="py-3 flex justify-between items-center">
                         <span class="mono">{{.}}</span>
                         <button class="btn btn-sm btn-danger"
-                                onclick="showConfirmModal('Remove address {{.}}?', '/interfaces/{{$.Interface.Name}}/addr?address={{urlquery .}}', 'DELETE')">
+                                data-confirm-message="Remove address {{.}}?"
+                                data-confirm-action="/interfaces/{{$.Interface.Name}}/addr?address={{urlquery .}}"
+                                data-confirm-method="DELETE">
                             Remove
                         </button>
                     </li>
@@ -170,7 +174,9 @@
                     <li class="py-3 flex justify-between items-center">
                         <span class="mono text-xs">{{.}}</span>
                         <button class="btn btn-sm btn-danger"
-                                onclick="showConfirmModal('Remove address {{.}}?', '/interfaces/{{$.Interface.Name}}/addr?address={{urlquery .}}', 'DELETE')">
+                                data-confirm-message="Remove address {{.}}?"
+                                data-confirm-action="/interfaces/{{$.Interface.Name}}/addr?address={{urlquery .}}"
+                                data-confirm-method="DELETE">
                             Remove
                         </button>
                     </li>

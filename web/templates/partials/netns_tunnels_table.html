@@ -45,7 +45,10 @@
                             </svg>
                         </button>
                         {{end}}
-                        <button onclick="showConfirmModal('Delete GRE Tunnel', 'Are you sure you want to delete tunnel {{.Name}}?', '/netns/{{$.Namespace.Name}}/tunnels/gre/{{.Name}}')" class="text-red-600 hover:text-red-900" title="Delete">
+                        <button data-confirm-message="Are you sure you want to delete tunnel {{.Name}}?"
+                                data-confirm-action="/netns/{{$.Namespace.Name}}/tunnels/gre/{{.Name}}"
+                                data-confirm-method="DELETE"
+                                class="text-red-600 hover:text-red-900" title="Delete">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
@@ -88,7 +91,10 @@
                             </svg>
                         </button>
                         {{end}}
-                        <button onclick="showConfirmModal('Delete VXLAN Tunnel', 'Are you sure you want to delete tunnel {{.Name}}?', '/netns/{{$.Namespace.Name}}/tunnels/vxlan/{{.Name}}')" class="text-red-600 hover:text-red-900" title="Delete">
+                        <button data-confirm-message="Are you sure you want to delete tunnel {{.Name}}?"
+                                data-confirm-action="/netns/{{$.Namespace.Name}}/tunnels/vxlan/{{.Name}}"
+                                data-confirm-method="DELETE"
+                                class="text-red-600 hover:text-red-900" title="Delete">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
@@ -130,7 +136,10 @@
                             </svg>
                         </button>
                         {{end}}
-                        <button onclick="showConfirmModal('Delete WireGuard Tunnel', 'Are you sure you want to delete tunnel {{.Name}}?', '/netns/{{$.Namespace.Name}}/tunnels/wireguard/{{.Name}}')" class="text-red-600 hover:text-red-900" title="Delete">
+                        <button data-confirm-message="Are you sure you want to delete tunnel {{.Name}}?"
+                                data-confirm-action="/netns/{{$.Namespace.Name}}/tunnels/wireguard/{{.Name}}"
+                                data-confirm-method="DELETE"
+                                class="text-red-600 hover:text-red-900" title="Delete">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
