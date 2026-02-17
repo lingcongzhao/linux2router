@@ -52,9 +52,12 @@ function showConfirmModal(message, actionUrl, method, body) {
         }
     }
     
+    // Set both old and new variables for compatibility
     pendingAction = actionUrl;
     pendingMethod = method || 'POST';
     pendingBody = body || null;
+    modalActionUrl = actionUrl;
+    modalActionMethod = method || 'POST';
     
     // Also set pendingDeleteUrl for backward compatibility with custom confirmAction implementations
     window.pendingDeleteUrl = actionUrl;
@@ -129,12 +132,43 @@ function setPolicy(baseUrl, table, chain, policy, selectEl) {
 
 // Show confirmation modal for deleting a routing table (default namespace)
 function showDeleteTableModal(name) {
-    showConfirmModal('Are you sure you want to delete routing table "' + name + '"? Any routes in this table will also be deleted.', '/rules/tables/' + encodeURIComponent(name), 'DELETE');
+    showActionModalWithUrl('Are you sure you want to delete routing table "' + name + '"? Any routes in this table will also be deleted.', '/rules/tables/' + encodeURIComponent(name), 'DELETE');
 }
 
 // Show confirmation modal for deleting a routing table in a specific namespace
 function showDeleteNetnsTableModal(namespace, name) {
-    showConfirmModal('Are you sure you want to delete routing table "' + name + '"? Any routes in this table will also be deleted.', '/netns/' + encodeURIComponent(namespace) + '/rules/tables/' + encodeURIComponent(name), 'DELETE');
+    showActionModalWithUrl('Are you sure you want to delete routing table "' + name + '"? Any routes in this table will also be deleted.', '/netns/' + encodeURIComponent(namespace) + '/rules/tables/' + encodeURIComponent(name), 'DELETE');
+}
+
+// Helper function to show modal with direct URL (for app.js functions)
+function showActionModalWithUrl(message, actionUrl, method) {
+    modalActionUrl = actionUrl;
+    modalActionMethod = method || 'DELETE';
+    
+    var msgEl = document.getElementById('confirm-modal-message');
+    var modal = document.getElementById('confirm-modal');
+    
+    if (msgEl) {
+        msgEl.textContent = message;
+    } else {
+        // Try custom modal pattern
+        var titleEl = document.getElementById('confirmTitle');
+        var customMsgEl = document.getElementById('confirmMessage');
+        if (titleEl && customMsgEl) {
+            titleEl.textContent = 'Confirm Action';
+            customMsgEl.textContent = message;
+        }
+    }
+    
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        // Try custom modal
+        var customModal = document.getElementById('confirmModal');
+        if (customModal) {
+            customModal.classList.remove('hidden');
+        }
+    }
 }
 
 // Refresh the table select dropdown after creating a new table
