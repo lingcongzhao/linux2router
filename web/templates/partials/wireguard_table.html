@@ -44,9 +44,10 @@
                 {{else}}
                 <button hx-post="/tunnels/wireguard/{{.Name}}/up" hx-target="#alert-container" class="text-green-600 hover:text-green-900">Up</button>
                 {{end}}
-                <button data-confirm-message="Are you sure you want to delete tunnel {{.Name}}?"
-                        data-confirm-action="/tunnels/wireguard/{{.Name}}"
-                        data-confirm-method="DELETE"
+                <button data-action="/tunnels/wireguard/{{.Name}}"
+                        data-method="DELETE"
+                        data-message="Are you sure you want to delete tunnel {{.Name}}?"
+                        onclick="showActionModal(this)"
                         class="text-red-600 hover:text-red-900">Delete</button>
             </td>
         </tr>

@@ -92,22 +92,41 @@
         <p class="text-sm text-gray-500 mb-6" id="confirmMessage">Are you sure?</p>
         <div class="flex justify-end space-x-3">
             <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-            <button id="confirmBtn" hx-target="#alert-container" onclick="confirmAction()" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500">Confirm</button>
+            <button id="modal-confirm-btn" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500" onclick="executeModalAction()">Confirm</button>
         </div>
     </div>
 </div>
 
 <script>
-function confirmAction() {
-    if (pendingAction) {
-        var btn = document.getElementById('confirmBtn');
-        var url = pendingAction;
-        pendingAction = null;  // Clear before triggering to prevent recursive calls
-        btn.setAttribute('hx-delete', url);
-        htmx.process(btn);
-        htmx.trigger(btn, 'click');
-    }
-    closeConfirmModal();
+var modalActionUrl = null;
+var modalActionMethod = 'DELETE';
+
+function showActionModal(btn) {
+    modalActionUrl = btn.getAttribute('data-action');
+    modalActionMethod = btn.getAttribute('data-method') || 'DELETE';
+    var message = btn.getAttribute('data-message') || 'Are you sure?';
+    
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function executeModalAction() {
+    if (!modalActionUrl) return;
+    
+    var options = { method: modalActionMethod, credentials: 'same-origin' };
+    
+    fetch(modalActionUrl, options)
+        .then(function(response) { return response.text(); })
+        .then(function(html) {
+            var alertContainer = document.getElementById('alert-container');
+            if (alertContainer) {
+                alertContainer.innerHTML = html;
+            }
+            setTimeout(function() { window.location.reload(); }, 300);
+        });
+    
+    document.getElementById('confirmModal').classList.add('hidden');
+    modalActionUrl = null;
 }
 </script>
 {{end}}

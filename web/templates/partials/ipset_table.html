@@ -35,15 +35,17 @@
                     <td class="text-right space-x-1">
                         <a href="/ipset/{{.Name}}" class="btn btn-sm btn-info">View</a>
                         <button class="btn btn-sm btn-warning"
-                                data-confirm-message="Flush all entries from {{.Name}}?"
-                                data-confirm-action="/ipset/{{.Name}}/flush"
-                                data-confirm-method="POST">
+                                data-action="/ipset/{{.Name}}/flush"
+                                data-method="POST"
+                                data-message="Flush all entries from {{.Name}}?"
+                                onclick="showActionModal(this)">
                             Flush
                         </button>
                         <button class="btn btn-sm btn-danger"
-                                data-confirm-message="Delete IP set {{.Name}}?{{if gt .References 0}} Warning: This set is referenced by iptables rules!{{end}}"
-                                data-confirm-action="/ipset/{{.Name}}"
-                                data-confirm-method="DELETE">
+                                data-action="/ipset/{{.Name}}"
+                                data-method="DELETE"
+                                data-message="Delete IP set {{.Name}}?{{if gt .References 0}} Warning: This set is referenced by iptables rules!{{end}}"
+                                onclick="showActionModal(this)">
                             Delete
                         </button>
                     </td>
