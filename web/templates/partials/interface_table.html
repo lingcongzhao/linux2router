@@ -52,8 +52,10 @@
                             <div class="flex space-x-2">
                                 {{if eq .State "UP"}}
                                 <button class="btn btn-sm btn-warning" style="width: 60px; text-align: center;"
-                                        data-confirm-message="Are you sure you want to bring down {{.Name}}?"
-                                        data-confirm-action="/interfaces/{{.Name}}/down">
+                                        data-action="/interfaces/{{.Name}}/down"
+                                        data-method="POST"
+                                        data-message="Are you sure you want to bring down {{.Name}}?"
+                                        onclick="showActionModal(this)">
                                     Down
                                 </button>
                                 {{else}}

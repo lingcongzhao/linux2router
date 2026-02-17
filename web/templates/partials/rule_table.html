@@ -37,9 +37,10 @@
                         <td>
                             {{if and (ne .Priority 0) (ne .Priority 32766) (ne .Priority 32767)}}
                             <button class="btn btn-sm btn-danger"
-                                    data-confirm-message="Delete rule with priority {{.Priority}}?"
-                                    data-confirm-action="/rules/{{.Priority}}"
-                                    data-confirm-method="DELETE">
+                                    data-action="/rules/{{.Priority}}"
+                                    data-method="DELETE"
+                                    data-message="Delete rule with priority {{.Priority}}?"
+                                    onclick="showActionModal(this)">
                                 Delete
                             </button>
                             {{else}}

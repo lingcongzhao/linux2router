@@ -37,9 +37,10 @@
                         <td>
                             {{if ne .Protocol "kernel"}}
                             <button type="button" class="btn btn-sm btn-danger"
-                                    data-confirm-message="Delete route to {{.Destination}}?"
-                                    data-confirm-action="/netns/{{$namespaceName}}/routes?destination={{.Destination}}&gateway={{.Gateway}}&interface={{.Interface}}&table={{$currentTable}}"
-                                    data-confirm-method="DELETE">
+                                    data-action="/netns/{{$namespaceName}}/routes?destination={{.Destination}}&gateway={{.Gateway}}&interface={{.Interface}}&table={{$currentTable}}"
+                                    data-method="DELETE"
+                                    data-message="Delete route to {{.Destination}}?"
+                                    onclick="showActionModal(this)">
                                 Delete
                             </button>
                             {{else}}

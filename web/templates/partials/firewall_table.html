@@ -26,9 +26,10 @@
             </div>
             {{else}}
             <button class="btn btn-sm btn-danger"
-                    data-confirm-message="Delete chain {{.SelectedChain.Name}}? All rules in this chain will be removed."
-                    data-confirm-action="/firewall/chains/{{.SelectedChain.Name}}?table={{$.CurrentTable}}"
-                    data-confirm-method="DELETE">
+                    data-action="/firewall/chains/{{.SelectedChain.Name}}?table={{$.CurrentTable}}"
+                    data-method="DELETE"
+                    data-message="Delete chain {{.SelectedChain.Name}}? All rules in this chain will be removed."
+                    onclick="showActionModal(this)">
                 Delete Chain
             </button>
             {{end}}
@@ -118,9 +119,10 @@
                 <td class="mono text-xs">{{.Packets}}/{{formatBytes .Bytes}}</td>
                 <td style="text-align: right; padding-right: 3ch;">
                     <button class="btn btn-sm btn-danger"
-                            data-confirm-message="Delete this rule?"
-                            data-confirm-action="/firewall/rules/{{.Num}}?table={{$currentTable}}&chain={{$chainName}}"
-                            data-confirm-method="DELETE">
+                            data-action="/firewall/rules/{{.Num}}?table={{urlquery $currentTable}}&chain={{urlquery $chainName}}"
+                            data-method="DELETE"
+                            data-message="Delete this rule?"
+                            onclick="showActionModal(this)">
                         Delete
                     </button>
                 </td>
