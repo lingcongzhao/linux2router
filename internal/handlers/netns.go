@@ -562,7 +562,7 @@ func (h *NetnsHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 		routes = []models.Route{}
 	}
 
-	tables, _ := h.routeService.GetRoutingTables()
+	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
 
 	interfaces, _ := h.netnsService.GetNamespaceInterfaceDetails(namespace)
 	var ifNames []string
@@ -900,12 +900,12 @@ func (h *NetnsHandler) ListTunnels(w http.ResponseWriter, r *http.Request) {
 	wgTunnels, _ := h.tunnelService.ListWireGuardTunnelsInNamespace(namespace)
 
 	data := map[string]interface{}{
-		"Title":          "Tunnels - " + namespace,
-		"ActivePage":     "netns",
-		"User":           user,
-		"Namespace":      ns,
-		"GRETunnels":     greTunnels,
-		"VXLANTunnels":   vxlanTunnels,
+		"Title":            "Tunnels - " + namespace,
+		"ActivePage":       "netns",
+		"User":             user,
+		"Namespace":        ns,
+		"GRETunnels":       greTunnels,
+		"VXLANTunnels":     vxlanTunnels,
 		"WireGuardTunnels": wgTunnels,
 	}
 
