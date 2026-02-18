@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -214,12 +215,29 @@ func (s *IPRouteService) GetRoutingTables() ([]models.RoutingTable, error) {
 		matches := re.FindStringSubmatch(line)
 		if matches != nil {
 			id, _ := strconv.Atoi(matches[1])
+			// Skip ID 0 (unspec)
+			if id == 0 {
+				continue
+			}
 			tables = append(tables, models.RoutingTable{
 				ID:   id,
 				Name: matches[2],
 			})
 		}
 	}
+
+	// Sort tables: reserved first (255, 254, 253), then custom by ID ascending
+	sort.Slice(tables, func(i, j int) bool {
+		// Reserved tables first
+		if tables[i].ID >= 253 && tables[j].ID < 253 {
+			return true
+		}
+		if tables[i].ID < 253 && tables[j].ID >= 253 {
+			return false
+		}
+		// Within same category, sort by ID ascending
+		return tables[i].ID < tables[j].ID
+	})
 
 	return tables, nil
 }
@@ -635,7 +653,7 @@ func (s *IPRouteService) DeleteRouteInNamespace(input models.RouteInput, namespa
 // GetRoutingTablesForNamespace returns routing tables for a specific namespace
 // Tables are stored in configs/netns/{namespace}/rt_tables
 func (s *IPRouteService) GetRoutingTablesForNamespace(namespace string) ([]models.RoutingTable, error) {
-	// Default tables that always exist
+	// Default tables that always exist (in order: local, main, default)
 	defaultTables := []models.RoutingTable{
 		{ID: 255, Name: "local"},
 		{ID: 254, Name: "main"},
@@ -651,7 +669,7 @@ func (s *IPRouteService) GetRoutingTablesForNamespace(namespace string) ([]model
 	}
 	defer file.Close()
 
-	var tables []models.RoutingTable
+	var customTables []models.RoutingTable
 	scanner := bufio.NewScanner(file)
 	re := regexp.MustCompile(`^\s*(\d+)\s+(\S+)`)
 
@@ -670,14 +688,19 @@ func (s *IPRouteService) GetRoutingTablesForNamespace(namespace string) ([]model
 			continue
 		}
 
-		tables = append(tables, models.RoutingTable{
+		customTables = append(customTables, models.RoutingTable{
 			ID:   id,
 			Name: name,
 		})
 	}
 
-	// Append default tables
-	tables = append(tables, defaultTables...)
+	// Sort custom tables by ID ascending
+	sort.Slice(customTables, func(i, j int) bool {
+		return customTables[i].ID < customTables[j].ID
+	})
+
+	// Prepend default tables, then add custom tables
+	tables := append(defaultTables, customTables...)
 	return tables, nil
 }
 

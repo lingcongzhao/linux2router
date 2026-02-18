@@ -285,11 +285,6 @@ func main() {
 		r.Post("/netns/{name}/rules/tables", netnsHandler.CreateTable)
 		r.Delete("/netns/{name}/rules/tables/{table}", netnsHandler.DeleteTable)
 
-		// Namespace Tunnels
-		r.Get("/netns/{name}/tunnels", netnsHandler.ListTunnels)
-		r.Get("/netns/{name}/tunnels/list", netnsHandler.GetTunnels)
-		r.Post("/netns/{name}/tunnels/save", netnsHandler.SaveTunnels)
-
 		// Namespace GRE Tunnels
 		r.Get("/netns/{name}/tunnels/gre", netnsHandler.ListGREInNamespace)
 		r.Get("/netns/{name}/tunnels/gre/list", netnsHandler.GetGRETunnelsInNamespace)

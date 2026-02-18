@@ -884,59 +884,6 @@ func (h *NetnsHandler) GetTableOptions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ListTunnels renders the tunnels page for a namespace
-func (h *NetnsHandler) ListTunnels(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUser(r)
-	namespace := chi.URLParam(r, "name")
-
-	ns, err := h.netnsService.GetNamespace(namespace)
-	if err != nil {
-		http.Error(w, "Namespace not found", http.StatusNotFound)
-		return
-	}
-
-	greTunnels, _ := h.tunnelService.ListGRETunnelsInNamespace(namespace)
-	vxlanTunnels, _ := h.tunnelService.ListVXLANTunnelsInNamespace(namespace)
-	wgTunnels, _ := h.tunnelService.ListWireGuardTunnelsInNamespace(namespace)
-
-	data := map[string]interface{}{
-		"Title":            "Tunnels - " + namespace,
-		"ActivePage":       "netns",
-		"User":             user,
-		"Namespace":        ns,
-		"GRETunnels":       greTunnels,
-		"VXLANTunnels":     vxlanTunnels,
-		"WireGuardTunnels": wgTunnels,
-	}
-
-	if err := h.templates.ExecuteTemplate(w, "netns_tunnels.html", data); err != nil {
-		log.Printf("Template error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// GetTunnels returns tunnels for HTMX refresh
-func (h *NetnsHandler) GetTunnels(w http.ResponseWriter, r *http.Request) {
-	namespace := chi.URLParam(r, "name")
-
-	ns, _ := h.netnsService.GetNamespace(namespace)
-	greTunnels, _ := h.tunnelService.ListGRETunnelsInNamespace(namespace)
-	vxlanTunnels, _ := h.tunnelService.ListVXLANTunnelsInNamespace(namespace)
-	wgTunnels, _ := h.tunnelService.ListWireGuardTunnelsInNamespace(namespace)
-
-	data := map[string]interface{}{
-		"Namespace":        ns,
-		"GRETunnels":       greTunnels,
-		"VXLANTunnels":     vxlanTunnels,
-		"WireGuardTunnels": wgTunnels,
-	}
-
-	if err := h.templates.ExecuteTemplate(w, "netns_tunnels_table.html", data); err != nil {
-		log.Printf("Template error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
 // CreateGRETunnel creates a GRE tunnel in a namespace
 func (h *NetnsHandler) CreateGRETunnel(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
