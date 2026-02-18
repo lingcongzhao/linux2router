@@ -1425,3 +1425,232 @@ func (s *TunnelService) SetInterfaceUpInNamespace(name, namespace string) error 
 func (s *TunnelService) SetInterfaceDownInNamespace(name, namespace string) error {
 	return s.setInterfaceDownInNamespace(name, namespace)
 }
+
+// GetWireGuardTunnelInNamespace gets a WireGuard tunnel by name in a namespace
+func (s *TunnelService) GetWireGuardTunnelInNamespace(name, namespace string) (*models.WireGuardTunnel, error) {
+	tunnels, err := s.ListWireGuardTunnelsInNamespace(namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tunnels {
+		if t.Name == name {
+			return &t, nil
+		}
+	}
+	return nil, fmt.Errorf("tunnel not found: %s", name)
+}
+
+// UpdateWireGuardInterfaceInNamespace updates WireGuard interface settings in a namespace
+func (s *TunnelService) UpdateWireGuardInterfaceInNamespace(name, namespace string, input models.WireGuardInterfaceInput) error {
+	if input.ListenPort > 0 {
+		var cmd *exec.Cmd
+		if namespace == "" {
+			cmd = exec.Command("wg", "set", name, "listen-port", strconv.Itoa(input.ListenPort))
+		} else {
+			cmd = exec.Command("ip", "netns", "exec", namespace, "wg", "set", name, "listen-port", strconv.Itoa(input.ListenPort))
+		}
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to set listen port: %s", string(output))
+		}
+	}
+	return nil
+}
+
+// AddWireGuardPeerInNamespace adds a peer to a WireGuard tunnel in a namespace
+func (s *TunnelService) AddWireGuardPeerInNamespace(interfaceName, namespace string, input models.WireGuardPeerInput) error {
+	if input.PublicKey == "" {
+		return fmt.Errorf("public key is required")
+	}
+
+	args := []string{"set", interfaceName, "peer", input.PublicKey}
+
+	if input.Endpoint != "" {
+		args = append(args, "endpoint", input.Endpoint)
+	}
+	if input.AllowedIPs != "" {
+		args = append(args, "allowed-ips", input.AllowedIPs)
+	}
+	if input.PersistentKeepalive > 0 {
+		args = append(args, "persistent-keepalive", strconv.Itoa(input.PersistentKeepalive))
+	}
+
+	var cmd *exec.Cmd
+	if namespace == "" {
+		cmd = exec.Command("wg", args...)
+	} else {
+		cmd = exec.Command("ip", "netns", "exec", namespace, "wg")
+		nsArgs := append([]string{}, args...)
+		cmd.Args = append(cmd.Args, nsArgs...)
+	}
+
+	if input.PresharedKey != "" {
+		args = append(args, "preshared-key", "/dev/stdin")
+		if namespace == "" {
+			cmd = exec.Command("wg", args...)
+		} else {
+			cmd = exec.Command("ip", append([]string{"netns", "exec", namespace, "wg"}, args...)...)
+		}
+		cmd.Stdin = strings.NewReader(input.PresharedKey)
+	}
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to add peer: %s", string(output))
+	}
+	return nil
+}
+
+// RemoveWireGuardPeerInNamespace removes a peer from a WireGuard tunnel in a namespace
+func (s *TunnelService) RemoveWireGuardPeerInNamespace(interfaceName, namespace, publicKey string) error {
+	var cmd *exec.Cmd
+	if namespace == "" {
+		cmd = exec.Command("wg", "set", interfaceName, "peer", publicKey, "remove")
+	} else {
+		cmd = exec.Command("ip", "netns", "exec", namespace, "wg", "set", interfaceName, "peer", publicKey, "remove")
+	}
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to remove peer: %s", string(output))
+	}
+	return nil
+}
+
+// UpdateWireGuardPeerInNamespace updates a peer in a WireGuard tunnel in a namespace
+func (s *TunnelService) UpdateWireGuardPeerInNamespace(interfaceName, namespace string, input models.WireGuardPeerInput) error {
+	if input.PublicKey == "" {
+		return fmt.Errorf("public key is required")
+	}
+
+	// Remove the old peer first
+	if err := s.RemoveWireGuardPeerInNamespace(interfaceName, namespace, input.PublicKey); err != nil {
+		return err
+	}
+
+	// Add the peer with updated settings
+	return s.AddWireGuardPeerInNamespace(interfaceName, namespace, input)
+}
+
+// AddWireGuardAddressInNamespace adds an address to a WireGuard tunnel in a namespace
+func (s *TunnelService) AddWireGuardAddressInNamespace(name, namespace, address string) error {
+	var cmd *exec.Cmd
+	if namespace == "" {
+		cmd = exec.Command("ip", "addr", "add", address, "dev", name)
+	} else {
+		cmd = exec.Command("ip", "netns", "exec", namespace, "ip", "addr", "add", address, "dev", name)
+	}
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to add address: %s", string(output))
+	}
+	return nil
+}
+
+// RemoveWireGuardAddressInNamespace removes an address from a WireGuard tunnel in a namespace
+func (s *TunnelService) RemoveWireGuardAddressInNamespace(name, namespace, address string) error {
+	var cmd *exec.Cmd
+	if namespace == "" {
+		cmd = exec.Command("ip", "addr", "del", address, "dev", name)
+	} else {
+		cmd = exec.Command("ip", "netns", "exec", namespace, "ip", "addr", "del", address, "dev", name)
+	}
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to remove address: %s", string(output))
+	}
+	return nil
+}
+
+// SaveTunnelsForNamespace saves tunnel configurations for a namespace
+func (s *TunnelService) SaveTunnelsForNamespace(namespace string) error {
+	tunnelDir := filepath.Join(s.configDir, "netns", namespace)
+	if err := os.MkdirAll(tunnelDir, 0755); err != nil {
+		return fmt.Errorf("failed to create tunnel config dir: %w", err)
+	}
+
+	// Save GRE tunnels
+	greTunnels, _ := s.ListGRETunnelsInNamespace(namespace)
+	if len(greTunnels) > 0 {
+		var greLines []string
+		for _, t := range greTunnels {
+			line := fmt.Sprintf("%s %s %s", t.Name, t.Local, t.Remote)
+			if t.Key != "" {
+				line += " key " + t.Key
+			}
+			if t.TTL > 0 {
+				line += fmt.Sprintf(" ttl %d", t.TTL)
+			}
+			greLines = append(greLines, line)
+		}
+		os.WriteFile(filepath.Join(tunnelDir, "gre.conf"), []byte(strings.Join(greLines, "\n")), 0644)
+	}
+
+	// Save VXLAN tunnels
+	vxlanTunnels, _ := s.ListVXLANTunnelsInNamespace(namespace)
+	if len(vxlanTunnels) > 0 {
+		var vxlanLines []string
+		for _, t := range vxlanTunnels {
+			line := fmt.Sprintf("%s %d", t.Name, t.VNI)
+			if t.Local != "" {
+				line += " local " + t.Local
+			}
+			if t.Remote != "" {
+				line += " remote " + t.Remote
+			}
+			if t.Group != "" {
+				line += " group " + t.Group
+			}
+			if t.Dev != "" {
+				line += " dev " + t.Dev
+			}
+			line += fmt.Sprintf(" dstport %d", t.DstPort)
+			if t.MAC != "" {
+				line += " mac " + t.MAC
+			}
+			vxlanLines = append(vxlanLines, line)
+		}
+		os.WriteFile(filepath.Join(tunnelDir, "vxlan.conf"), []byte(strings.Join(vxlanLines, "\n")), 0644)
+	}
+
+	// Save WireGuard tunnels
+	wgTunnels, _ := s.ListWireGuardTunnelsInNamespace(namespace)
+	if len(wgTunnels) > 0 {
+		for _, t := range wgTunnels {
+			wgConf := s.generateWireGuardConfigInNamespace(&t, namespace)
+			os.WriteFile(filepath.Join(tunnelDir, t.Name+".conf"), []byte(wgConf), 0644)
+		}
+	}
+
+	return nil
+}
+
+func (s *TunnelService) generateWireGuardConfigInNamespace(tunnel *models.WireGuardTunnel, namespace string) string {
+	var cmd *exec.Cmd
+	if namespace == "" {
+		cmd = exec.Command("wg", "show", tunnel.Name, "private-key")
+	} else {
+		cmd = exec.Command("ip", "netns", "exec", namespace, "wg", "show", tunnel.Name, "private-key")
+	}
+	privKey, _ := cmd.Output()
+
+	var config strings.Builder
+	config.WriteString("[Interface]\n")
+	config.WriteString(fmt.Sprintf("PrivateKey = %s\n", strings.TrimSpace(string(privKey))))
+	if tunnel.ListenPort > 0 {
+		config.WriteString(fmt.Sprintf("ListenPort = %d\n", tunnel.ListenPort))
+	}
+	for _, addr := range tunnel.Addresses {
+		config.WriteString(fmt.Sprintf("Address = %s\n", addr))
+	}
+
+	for _, peer := range tunnel.Peers {
+		config.WriteString("\n[Peer]\n")
+		config.WriteString(fmt.Sprintf("PublicKey = %s\n", peer.PublicKey))
+		if peer.Endpoint != "" {
+			config.WriteString(fmt.Sprintf("Endpoint = %s\n", peer.Endpoint))
+		}
+		if len(peer.AllowedIPs) > 0 {
+			config.WriteString(fmt.Sprintf("AllowedIPs = %s\n", strings.Join(peer.AllowedIPs, ", ")))
+		}
+		if peer.PersistentKeepalive > 0 {
+			config.WriteString(fmt.Sprintf("PersistentKeepalive = %d\n", peer.PersistentKeepalive))
+		}
+	}
+
+	return config.String()
+}

@@ -1126,6 +1126,388 @@ func (h *NetnsHandler) SetTunnelDown(w http.ResponseWriter, r *http.Request) {
 	h.renderAlert(w, "success", "Tunnel is now down")
 }
 
+// ==================== GRE Tunnel Pages ====================
+
+func (h *NetnsHandler) ListGREInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+
+	ns, err := h.netnsService.GetNamespace(namespace)
+	if err != nil {
+		http.Error(w, "Namespace not found", http.StatusNotFound)
+		return
+	}
+
+	tunnels, err := h.tunnelService.ListGRETunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list GRE tunnels: %v", err)
+		tunnels = []models.GRETunnel{}
+	}
+
+	data := map[string]interface{}{
+		"Title":         "GRE Tunnels - " + namespace,
+		"ActivePage":    "netns",
+		"User":          user,
+		"Namespace":     ns,
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_gre.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) GetGRETunnelsInNamespace(w http.ResponseWriter, r *http.Request) {
+	namespace := chi.URLParam(r, "name")
+
+	tunnels, err := h.tunnelService.ListGRETunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list GRE tunnels: %v", err)
+		tunnels = []models.GRETunnel{}
+	}
+
+	data := map[string]interface{}{
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_gre_table.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// ==================== VXLAN Tunnel Pages ====================
+
+func (h *NetnsHandler) ListVXLANInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+
+	ns, err := h.netnsService.GetNamespace(namespace)
+	if err != nil {
+		http.Error(w, "Namespace not found", http.StatusNotFound)
+		return
+	}
+
+	tunnels, err := h.tunnelService.ListVXLANTunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list VXLAN tunnels: %v", err)
+		tunnels = []models.VXLANTunnel{}
+	}
+
+	data := map[string]interface{}{
+		"Title":         "VXLAN Tunnels - " + namespace,
+		"ActivePage":    "netns",
+		"User":          user,
+		"Namespace":     ns,
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_vxlan.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) GetVXLANTunnelsInNamespace(w http.ResponseWriter, r *http.Request) {
+	namespace := chi.URLParam(r, "name")
+
+	tunnels, err := h.tunnelService.ListVXLANTunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list VXLAN tunnels: %v", err)
+		tunnels = []models.VXLANTunnel{}
+	}
+
+	data := map[string]interface{}{
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_vxlan_table.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// ==================== WireGuard Tunnel Pages ====================
+
+func (h *NetnsHandler) ListWireGuardInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+
+	ns, err := h.netnsService.GetNamespace(namespace)
+	if err != nil {
+		http.Error(w, "Namespace not found", http.StatusNotFound)
+		return
+	}
+
+	tunnels, err := h.tunnelService.ListWireGuardTunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list WireGuard tunnels: %v", err)
+		tunnels = []models.WireGuardTunnel{}
+	}
+
+	data := map[string]interface{}{
+		"Title":         "WireGuard Tunnels - " + namespace,
+		"ActivePage":    "netns",
+		"User":          user,
+		"Namespace":     ns,
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_wireguard.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) GetWireGuardTunnelsInNamespace(w http.ResponseWriter, r *http.Request) {
+	namespace := chi.URLParam(r, "name")
+
+	tunnels, err := h.tunnelService.ListWireGuardTunnelsInNamespace(namespace)
+	if err != nil {
+		log.Printf("Failed to list WireGuard tunnels: %v", err)
+		tunnels = []models.WireGuardTunnel{}
+	}
+
+	data := map[string]interface{}{
+		"NamespaceName": namespace,
+		"Tunnels":       tunnels,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_wireguard_table.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) ViewWireGuardInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	tunnel, err := h.tunnelService.GetWireGuardTunnelInNamespace(tunnelName, namespace)
+	if err != nil {
+		http.Error(w, "Tunnel not found", http.StatusNotFound)
+		return
+	}
+
+	data := map[string]interface{}{
+		"Title":         "WireGuard: " + tunnelName,
+		"ActivePage":    "netns",
+		"User":          user,
+		"NamespaceName": namespace,
+		"Tunnel":        tunnel,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_wireguard_detail.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) UpdateWireGuardInterfaceInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	if err := r.ParseForm(); err != nil {
+		h.renderAlert(w, "error", "Invalid form data")
+		return
+	}
+
+	listenPort, _ := strconv.Atoi(r.FormValue("listen_port"))
+
+	input := models.WireGuardInterfaceInput{
+		ListenPort: listenPort,
+	}
+
+	if err := h.tunnelService.UpdateWireGuardInterfaceInNamespace(tunnelName, namespace, input); err != nil {
+		log.Printf("Failed to update WireGuard interface: %v", err)
+		h.renderAlert(w, "error", "Failed to update interface: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_interface_update", "Namespace: "+namespace+" Tunnel: "+tunnelName, getClientIP(r))
+	h.renderAlert(w, "success", "Interface updated successfully")
+}
+
+func (h *NetnsHandler) AddWireGuardPeerInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	if err := r.ParseForm(); err != nil {
+		h.renderAlert(w, "error", "Invalid form data")
+		return
+	}
+
+	keepalive, _ := strconv.Atoi(r.FormValue("persistent_keepalive"))
+
+	input := models.WireGuardPeerInput{
+		PublicKey:           r.FormValue("public_key"),
+		Endpoint:            r.FormValue("endpoint"),
+		AllowedIPs:          r.FormValue("allowed_ips"),
+		PresharedKey:        r.FormValue("preshared_key"),
+		PersistentKeepalive: keepalive,
+	}
+
+	if input.PublicKey == "" || input.AllowedIPs == "" {
+		h.renderAlert(w, "error", "Public key and allowed IPs are required")
+		return
+	}
+
+	if err := h.tunnelService.AddWireGuardPeerInNamespace(tunnelName, namespace, input); err != nil {
+		log.Printf("Failed to add WireGuard peer: %v", err)
+		h.renderAlert(w, "error", "Failed to add peer: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_peer_add", "Namespace: "+namespace+" Tunnel: "+tunnelName, getClientIP(r))
+	h.renderAlert(w, "success", "Peer added successfully")
+}
+
+func (h *NetnsHandler) RemoveWireGuardPeerInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	publicKey := r.URL.Query().Get("public_key")
+	if publicKey == "" {
+		h.renderAlert(w, "error", "Public key is required")
+		return
+	}
+
+	if err := h.tunnelService.RemoveWireGuardPeerInNamespace(tunnelName, namespace, publicKey); err != nil {
+		log.Printf("Failed to remove WireGuard peer: %v", err)
+		h.renderAlert(w, "error", "Failed to remove peer: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_peer_remove", "Namespace: "+namespace+" Tunnel: "+tunnelName, getClientIP(r))
+	h.renderAlert(w, "success", "Peer removed successfully")
+}
+
+func (h *NetnsHandler) UpdateWireGuardPeerInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	if err := r.ParseForm(); err != nil {
+		h.renderAlert(w, "error", "Invalid form data")
+		return
+	}
+
+	keepalive, _ := strconv.Atoi(r.FormValue("persistent_keepalive"))
+
+	input := models.WireGuardPeerInput{
+		PublicKey:           r.FormValue("public_key"),
+		Endpoint:            r.FormValue("endpoint"),
+		AllowedIPs:          r.FormValue("allowed_ips"),
+		PersistentKeepalive: keepalive,
+	}
+
+	if input.PublicKey == "" || input.AllowedIPs == "" {
+		h.renderAlert(w, "error", "Public key and allowed IPs are required")
+		return
+	}
+
+	if err := h.tunnelService.UpdateWireGuardPeerInNamespace(tunnelName, namespace, input); err != nil {
+		log.Printf("Failed to update WireGuard peer: %v", err)
+		h.renderAlert(w, "error", "Failed to update peer: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_peer_update", "Namespace: "+namespace+" Tunnel: "+tunnelName, getClientIP(r))
+	h.renderAlert(w, "success", "Peer updated successfully")
+}
+
+func (h *NetnsHandler) GetWireGuardPeersInNamespace(w http.ResponseWriter, r *http.Request) {
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	tunnel, err := h.tunnelService.GetWireGuardTunnelInNamespace(tunnelName, namespace)
+	if err != nil {
+		log.Printf("Failed to get WireGuard tunnel: %v", err)
+	}
+
+	data := map[string]interface{}{
+		"NamespaceName": namespace,
+		"Tunnel":        tunnel,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "netns_wireguard_peers.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *NetnsHandler) AddWireGuardAddressInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	if err := r.ParseForm(); err != nil {
+		h.renderAlert(w, "error", "Invalid form data")
+		return
+	}
+
+	address := strings.TrimSpace(r.FormValue("address"))
+	if address == "" {
+		h.renderAlert(w, "error", "Address is required")
+		return
+	}
+
+	if err := h.tunnelService.AddWireGuardAddressInNamespace(tunnelName, namespace, address); err != nil {
+		log.Printf("Failed to add WireGuard address: %v", err)
+		h.renderAlert(w, "error", "Failed to add address: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_address_add", "Namespace: "+namespace+" Tunnel: "+tunnelName+" Address: "+address, getClientIP(r))
+	h.renderAlert(w, "success", "Address added successfully")
+}
+
+func (h *NetnsHandler) RemoveWireGuardAddressInNamespace(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+	tunnelName := chi.URLParam(r, "tunnel")
+
+	address := r.URL.Query().Get("address")
+	if address == "" {
+		h.renderAlert(w, "error", "Address is required")
+		return
+	}
+
+	if err := h.tunnelService.RemoveWireGuardAddressInNamespace(tunnelName, namespace, address); err != nil {
+		log.Printf("Failed to remove WireGuard address: %v", err)
+		h.renderAlert(w, "error", "Failed to remove address: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_wg_address_remove", "Namespace: "+namespace+" Tunnel: "+tunnelName+" Address: "+address, getClientIP(r))
+	h.renderAlert(w, "success", "Address removed successfully")
+}
+
+// SaveTunnels saves tunnel configurations for a namespace
+func (h *NetnsHandler) SaveTunnels(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	namespace := chi.URLParam(r, "name")
+
+	if err := h.tunnelService.SaveTunnelsForNamespace(namespace); err != nil {
+		log.Printf("Failed to save tunnels: %v", err)
+		h.renderAlert(w, "error", "Failed to save tunnels: "+err.Error())
+		return
+	}
+
+	h.userService.LogAction(&user.ID, "netns_tunnels_save", "Namespace: "+namespace, getClientIP(r))
+	h.renderAlert(w, "success", "Tunnels saved successfully")
+}
+
 func (h *NetnsHandler) renderAlert(w http.ResponseWriter, alertType, message string) {
 	if alertType == "success" {
 		w.Header().Set("HX-Trigger", "refresh")

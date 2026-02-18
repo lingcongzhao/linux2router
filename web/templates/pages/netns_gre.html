@@ -1,0 +1,139 @@
+{{define "netns_gre.html"}}
+{{template "base" .}}
+{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="/netns/{{.NamespaceName}}" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">GRE Tunnels - {{.NamespaceName}}</h1>
+                <p class="mt-1 text-sm text-gray-500">Generic Routing Encapsulation tunnels in namespace {{.NamespaceName}}</p>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="document.getElementById('addModal').classList.remove('hidden')" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Tunnel
+            </button>
+            <button hx-post="/netns/{{.NamespaceName}}/tunnels/save" hx-target="#alert-container" class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
+                Save Tunnels
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
+
+    <!-- Tunnels Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div id="tunnel-table" hx-get="/netns/{{.NamespaceName}}/tunnels/gre/list" hx-trigger="load, refresh from:body, every 10s" hx-swap="innerHTML">
+            {{template "netns_gre_table" .}}
+        </div>
+    </div>
+</div>
+
+<!-- Add Tunnel Modal -->
+<div id="addModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Add GRE Tunnel</h3>
+            <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form hx-post="/netns/{{.NamespaceName}}/tunnels/gre" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) document.getElementById('addModal').classList.add('hidden')">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tunnel Name</label>
+                    <input type="text" name="name" required placeholder="gre1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Local IP</label>
+                    <input type="text" name="local" required placeholder="192.168.1.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Remote IP</label>
+                    <input type="text" name="remote" required placeholder="192.168.2.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Key (Optional)</label>
+                    <input type="text" name="key" placeholder="12345" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">Tunnel key for identification</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">TTL (Optional)</label>
+                    <input type="number" name="ttl" placeholder="64" min="1" max="255" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tunnel IP Address (Optional)</label>
+                    <input type="text" name="address" placeholder="10.0.0.1/30" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2 border">
+                    <p class="mt-1 text-xs text-gray-500">IP address in CIDR format for the tunnel interface</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Create Tunnel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-medium text-gray-900 mb-4" id="confirmTitle">Confirm Action</h3>
+        <p class="text-sm text-gray-500 mb-6" id="confirmMessage">Are you sure?</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button id="modal-confirm-btn" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500" onclick="executeModalAction()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var modalActionUrl = null;
+var modalActionMethod = 'DELETE';
+
+function showActionModal(btn) {
+    modalActionUrl = btn.getAttribute('data-action');
+    modalActionMethod = btn.getAttribute('data-method') || 'DELETE';
+    var message = btn.getAttribute('data-message') || 'Are you sure?';
+    
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function executeModalAction() {
+    if (!modalActionUrl) return;
+    
+    var options = { method: modalActionMethod, credentials: 'same-origin' };
+    
+    fetch(modalActionUrl, options)
+        .then(function(response) { return response.text(); })
+        .then(function(html) {
+            var alertContainer = document.getElementById('alert-container');
+            if (alertContainer) {
+                alertContainer.innerHTML = html;
+            }
+            setTimeout(function() { window.location.reload(); }, 300);
+        });
+    
+    document.getElementById('confirmModal').classList.add('hidden');
+    modalActionUrl = null;
+}
+</script>
+{{end}}

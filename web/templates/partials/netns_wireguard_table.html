@@ -1,0 +1,55 @@
+{{define "netns_wireguard_table"}}
+<table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listen Port</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Addresses</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peers</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+        {{if .Tunnels}}
+        {{range .Tunnels}}
+        <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <a href="/netns/{{$.NamespaceName}}/tunnels/wireguard/{{.Name}}" class="text-indigo-600 hover:text-indigo-900">{{.Name}}</a>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">{{if .PublicKey}}{{.PublicKey}}{{else}}-{{end}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{if .ListenPort}}{{.ListenPort}}{{else}}-{{end}}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 font-mono" style="max-width: 120px;">{{if .Addresses}}{{range $i, $addr := .Addresses}}{{if $i}}, {{end}}{{$addr}}{{end}}{{else}}-{{end}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{len .Peers}}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                {{if eq .State "UP"}}
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">UP</span>
+                {{else}}
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">DOWN</span>
+                {{end}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                {{if eq .State "UP"}}
+                <button hx-post="/netns/{{$.NamespaceName}}/tunnels/{{.Name}}/down" hx-target="#alert-container" class="text-yellow-600 hover:text-yellow-900">Down</button>
+                {{else}}
+                <button hx-post="/netns/{{$.NamespaceName}}/tunnels/{{.Name}}/up" hx-target="#alert-container" class="text-green-600 hover:text-green-900">Up</button>
+                {{end}}
+                <button data-action="/netns/{{$.NamespaceName}}/tunnels/wireguard/{{.Name}}"
+                        data-method="DELETE"
+                        data-message="Are you sure you want to delete tunnel {{.Name}}?"
+                        onclick="showActionModal(this)"
+                        class="text-red-600 hover:text-red-900">Delete</button>
+            </td>
+        </tr>
+        {{end}}
+        {{else}}
+        <tr>
+            <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                No WireGuard tunnels configured
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{end}}

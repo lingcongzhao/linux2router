@@ -288,12 +288,35 @@ func main() {
 		// Namespace Tunnels
 		r.Get("/netns/{name}/tunnels", netnsHandler.ListTunnels)
 		r.Get("/netns/{name}/tunnels/list", netnsHandler.GetTunnels)
+		r.Post("/netns/{name}/tunnels/save", netnsHandler.SaveTunnels)
+
+		// Namespace GRE Tunnels
+		r.Get("/netns/{name}/tunnels/gre", netnsHandler.ListGREInNamespace)
+		r.Get("/netns/{name}/tunnels/gre/list", netnsHandler.GetGRETunnelsInNamespace)
 		r.Post("/netns/{name}/tunnels/gre", netnsHandler.CreateGRETunnel)
 		r.Delete("/netns/{name}/tunnels/gre/{tunnel}", netnsHandler.DeleteGRETunnel)
+
+		// Namespace VXLAN Tunnels
+		r.Get("/netns/{name}/tunnels/vxlan", netnsHandler.ListVXLANInNamespace)
+		r.Get("/netns/{name}/tunnels/vxlan/list", netnsHandler.GetVXLANTunnelsInNamespace)
 		r.Post("/netns/{name}/tunnels/vxlan", netnsHandler.CreateVXLANTunnel)
 		r.Delete("/netns/{name}/tunnels/vxlan/{tunnel}", netnsHandler.DeleteVXLANTunnel)
+
+		// Namespace WireGuard Tunnels
+		r.Get("/netns/{name}/tunnels/wireguard", netnsHandler.ListWireGuardInNamespace)
+		r.Get("/netns/{name}/tunnels/wireguard/list", netnsHandler.GetWireGuardTunnelsInNamespace)
 		r.Post("/netns/{name}/tunnels/wireguard", netnsHandler.CreateWireGuardTunnel)
+		r.Get("/netns/{name}/tunnels/wireguard/{tunnel}", netnsHandler.ViewWireGuardInNamespace)
+		r.Put("/netns/{name}/tunnels/wireguard/{tunnel}", netnsHandler.UpdateWireGuardInterfaceInNamespace)
 		r.Delete("/netns/{name}/tunnels/wireguard/{tunnel}", netnsHandler.DeleteWireGuardTunnel)
+		r.Get("/netns/{name}/tunnels/wireguard/{tunnel}/peers", netnsHandler.GetWireGuardPeersInNamespace)
+		r.Post("/netns/{name}/tunnels/wireguard/{tunnel}/peers", netnsHandler.AddWireGuardPeerInNamespace)
+		r.Put("/netns/{name}/tunnels/wireguard/{tunnel}/peers", netnsHandler.UpdateWireGuardPeerInNamespace)
+		r.Delete("/netns/{name}/tunnels/wireguard/{tunnel}/peers", netnsHandler.RemoveWireGuardPeerInNamespace)
+		r.Post("/netns/{name}/tunnels/wireguard/{tunnel}/addresses", netnsHandler.AddWireGuardAddressInNamespace)
+		r.Delete("/netns/{name}/tunnels/wireguard/{tunnel}/addresses", netnsHandler.RemoveWireGuardAddressInNamespace)
+
+		// Common tunnel actions
 		r.Post("/netns/{name}/tunnels/{tunnel}/up", netnsHandler.SetTunnelUp)
 		r.Post("/netns/{name}/tunnels/{tunnel}/down", netnsHandler.SetTunnelDown)
 

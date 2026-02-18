@@ -82,6 +82,12 @@ type WireGuardTunnelInput struct {
 	Address    string `json:"address,omitempty"` // IP address to assign
 }
 
+// WireGuardInterfaceInput represents input for updating a WireGuard interface
+type WireGuardInterfaceInput struct {
+	ListenPort int    `json:"listen_port,omitempty"`
+	Address    string `json:"address,omitempty"`
+}
+
 // WireGuardPeerInput represents input for adding a WireGuard peer
 type WireGuardPeerInput struct {
 	Interface           string `json:"interface"`
