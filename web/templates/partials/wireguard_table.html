@@ -2,7 +2,7 @@
 <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
         <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listen Port</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Addresses</th>
@@ -15,7 +15,9 @@
         {{if .Tunnels}}
         {{range .Tunnels}}
         <tr>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{.Name}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <a href="/tunnels/wireguard/{{.Name}}" class="text-indigo-600 hover:text-indigo-900">{{.Name}}</a>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
                 {{if .PublicKey}}{{slice .PublicKey 0 20}}...{{else}}-{{end}}
             </td>
