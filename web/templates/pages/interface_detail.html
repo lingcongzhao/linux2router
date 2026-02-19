@@ -37,7 +37,8 @@
             <button class="btn btn-success"
                     hx-post="/interfaces/{{.Interface.Name}}/up"
                     hx-target="#alert-container"
-                    hx-swap="innerHTML">
+                    hx-swap="innerHTML"
+                    hx-on::after-request="setTimeout(function(){ window.location.reload(); }, 300)">
                 Bring Up
             </button>
             {{end}}
