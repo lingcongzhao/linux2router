@@ -518,11 +518,22 @@ func (h *NetnsHandler) SetChainPolicy(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
 	namespace := chi.URLParam(r, "name")
 	chain := chi.URLParam(r, "chain")
+
+	if err := r.ParseForm(); err != nil {
+		h.renderAlert(w, "error", "Invalid form data")
+		return
+	}
+
 	table := r.FormValue("table")
 	policy := r.FormValue("policy")
 
 	if table == "" {
 		table = "filter"
+	}
+
+	if policy == "" {
+		h.renderAlert(w, "error", "Policy is required")
+		return
 	}
 
 	if policy != "ACCEPT" && policy != "DROP" {

@@ -256,6 +256,10 @@ function executeModalAction() {
     
     var btn = document.getElementById('modal-confirm-btn');
     var options = { method: modalActionMethod, credentials: 'same-origin' };
+    if (pendingBody) {
+        options.headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+        options.body = pendingBody;
+    }
     
     fetch(modalActionUrl, options)
         .then(function(response) { return response.text(); })

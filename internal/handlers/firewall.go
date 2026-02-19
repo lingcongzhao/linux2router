@@ -346,6 +346,16 @@ func (h *FirewallHandler) SetPolicy(w http.ResponseWriter, r *http.Request) {
 		table = "filter"
 	}
 
+	if policy == "" {
+		h.renderAlert(w, "error", "Policy is required")
+		return
+	}
+
+	if policy != "ACCEPT" && policy != "DROP" {
+		h.renderAlert(w, "error", "Invalid policy: must be ACCEPT or DROP")
+		return
+	}
+
 	if err := h.iptablesService.SetPolicy(table, chain, policy); err != nil {
 		log.Printf("Failed to set policy: %v", err)
 		h.renderAlert(w, "error", "Failed to set policy: "+err.Error())
