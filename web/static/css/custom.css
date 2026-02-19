@@ -1,5 +1,22 @@
 /* Custom styles for Linux Router GUI */
 
+/* Scrollbar gutter fix to prevent layout shift when switching pages */
+/* Modern browsers: use scrollbar-gutter for stable scrollbar gutter */
+@supports (scrollbar-gutter: stable) {
+    html {
+        overflow-y: auto;
+        scrollbar-gutter: stable;
+    }
+}
+
+/* Fallback for browsers that don't support scrollbar-gutter */
+/* Always show scrollbar gutter to prevent layout shift */
+@supports not (scrollbar-gutter: stable) {
+    html {
+        overflow-y: scroll;
+    }
+}
+
 /* Loading indicator for HTMX requests */
 .htmx-request .htmx-indicator {
     display: inline-block;
