@@ -236,11 +236,11 @@ func (s *NetnsService) MoveInterface(input models.MoveInterfaceInput) error {
 
 	var cmd *exec.Cmd
 	if input.Namespace == "" {
-		// Move back to default namespace - need to find current namespace first
-		return fmt.Errorf("moving interface back to default namespace is not supported directly")
+		// Move back to default namespace using pid 1 (init/default netns)
+		cmd = exec.Command("ip", "link", "set", input.Interface, "netns", "1")
+	} else {
+		cmd = exec.Command("ip", "link", "set", input.Interface, "netns", input.Namespace)
 	}
-
-	cmd = exec.Command("ip", "link", "set", input.Interface, "netns", input.Namespace)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to move interface: %s", string(output))
 	}
@@ -473,12 +473,9 @@ func (s *NetnsService) SetInterfaceState(namespace, ifName string, up bool) erro
 	return nil
 }
 
-// RemoveInterface removes an interface from a namespace
-// For veth pairs, this deletes the interface (which also removes its peer)
-// For other interfaces, this is not supported (would need to move back to default ns)
+// RemoveInterface moves an interface from a namespace back to the default namespace
 func (s *NetnsService) RemoveInterface(namespace, ifName string) error {
-	// Try to delete the interface (works for veth, vxlan, etc.)
-	cmd := exec.Command("ip", "netns", "exec", namespace, "ip", "link", "delete", ifName)
+	cmd := exec.Command("ip", "netns", "exec", namespace, "ip", "link", "set", ifName, "netns", "1")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to remove interface: %s", string(output))
 	}
