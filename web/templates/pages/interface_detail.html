@@ -28,6 +28,7 @@
             {{if eq .Interface.State "UP"}}
             <button class="btn btn-secondary"
                     data-action="/interfaces/{{.Interface.Name}}/down"
+                    data-method="POST"
                     data-message="Are you sure you want to bring down {{.Interface.Name}}?"
                     onclick="showActionModal(this)">
                 Bring Down
