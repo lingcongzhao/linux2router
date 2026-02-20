@@ -210,6 +210,12 @@ func (s *PersistService) RestoreAll(
 		errors = append(errors, "tunnels: "+err.Error())
 	}
 
+	// Restore Dnsmasq configuration
+	dnsmasqService := NewDnsmasqService(s.configDir)
+	if err := dnsmasqService.RestoreConfig(); err != nil {
+		errors = append(errors, "dnsmasq: "+err.Error())
+	}
+
 	if len(errors) > 0 {
 		return fmt.Errorf("some configurations failed to restore: %v", errors)
 	}

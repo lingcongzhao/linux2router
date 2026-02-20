@@ -24,6 +24,35 @@
             </div>
         </main>
     </div>
+    <script>
+    function updateServiceControls(service) {
+        Promise.all([
+            fetch('/' + service + '/controls').then(r => r.text()),
+            fetch('/' + service + '/status').then(r => r.text())
+        ]).then(([controlsHtml, statusHtml]) => {
+            const controlsContainer = document.getElementById(service + '-controls-container');
+            if (controlsContainer) {
+                controlsContainer.innerHTML = controlsHtml;
+                htmx.process(controlsContainer);
+            }
+            
+            const statusContainer = document.getElementById(service + '-status-container');
+            if (statusContainer) {
+                statusContainer.innerHTML = statusHtml;
+                htmx.process(statusContainer);
+            }
+        }).catch(err => console.error('Error updating ' + service + ' controls:', err));
+    }
+    
+    // Start polling after a short delay to ensure page is loaded
+    setTimeout(function() {
+        updateServiceControls('dns');
+        updateServiceControls('dhcp');
+        
+        setInterval(function() { updateServiceControls('dns'); }, 3000);
+        setInterval(function() { updateServiceControls('dhcp'); }, 3000);
+    }, 500);
+    </script>
 </body>
 </html>
 {{end}}

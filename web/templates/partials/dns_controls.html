@@ -1,0 +1,17 @@
+{{define "dns_controls"}}
+<div class="mt-4 flex md:ml-4 md:mt-0 space-x-2">
+    <button class="btn {{if eq .Status "active"}}btn-danger{{else}}btn-success{{end}}"
+            hx-post="/dns/{{if eq .Status "active"}}stop{{else}}start{{end}}"
+            hx-target="#alert-container"
+            hx-swap="innerHTML"
+            title="Status: {{.Status}}">
+        {{if eq .Status "active"}}Stop Service{{else}}Start Service{{end}}
+    </button>
+    <button class="btn btn-warning"
+            hx-post="/dns/restart"
+            hx-target="#alert-container"
+            hx-swap="innerHTML">
+        Restart Service
+    </button>
+</div>
+{{end}}

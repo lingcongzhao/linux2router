@@ -1,0 +1,36 @@
+{{define "dhcp_static_leases"}}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>MAC Address</th>
+                <th>IP Address</th>
+                <th>Hostname</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Leases}}
+            <tr>
+                <td class="font-mono text-sm">{{.MAC}}</td>
+                <td class="font-mono text-sm">{{.IP}}</td>
+                <td>{{if .Hostname}}{{.Hostname}}{{else}}<span class="text-gray-400">-</span>{{end}}</td>
+                <td class="text-right">
+                    <button class="btn btn-sm btn-danger"
+                            data-action="/dhcp/static-leases/{{.MAC}}"
+                            data-method="DELETE"
+                            data-message="Remove static lease for {{.MAC}}?"
+                            onclick="showActionModal(this)">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="4" class="text-center text-gray-500">No static leases defined</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

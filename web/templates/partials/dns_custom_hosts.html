@@ -1,0 +1,34 @@
+{{define "dns_custom_hosts"}}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Hostname</th>
+                <th>IP Address</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Hosts}}
+            <tr>
+                <td class="font-medium">{{.Hostname}}</td>
+                <td class="font-mono text-sm">{{.IP}}</td>
+                <td class="text-right">
+                    <button class="btn btn-sm btn-danger"
+                            data-action="/dns/custom-hosts/{{.Hostname}}"
+                            data-method="DELETE"
+                            data-message="Remove custom host entry for {{.Hostname}}?"
+                            onclick="showActionModal(this)">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="3" class="text-center text-gray-500">No custom hosts defined</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

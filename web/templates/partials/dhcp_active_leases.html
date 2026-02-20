@@ -1,0 +1,34 @@
+{{define "dhcp_active_leases"}}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>MAC Address</th>
+                <th>IP Address</th>
+                <th>Hostname</th>
+                <th>Expires</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Leases}}
+            <tr>
+                <td class="font-mono text-sm">{{.MAC}}</td>
+                <td class="font-mono text-sm">{{.IP}}</td>
+                <td>{{if .Hostname}}{{.Hostname}}{{else}}<span class="text-gray-400">*</span>{{end}}</td>
+                <td class="text-sm text-gray-600">
+                    {{if eq .ExpiryTime 0}}
+                    <span class="badge badge-green">Never</span>
+                    {{else}}
+                    {{formatTime .ExpiryTime}}
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="4" class="text-center text-gray-500">No active leases</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

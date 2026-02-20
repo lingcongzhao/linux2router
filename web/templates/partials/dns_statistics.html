@@ -1,0 +1,41 @@
+{{define "dns_statistics"}}
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-medium text-gray-500">Total Queries</h3>
+            <p class="mt-2 text-3xl font-semibold text-gray-900">{{.Stats.TotalQueries}}</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-medium text-gray-500">Cache Hits</h3>
+            <p class="mt-2 text-3xl font-semibold text-green-600">{{.Stats.CacheHits}}</p>
+            {{if gt .Stats.TotalQueries 0}}
+            <p class="mt-1 text-sm text-gray-500">
+                {{printf "%.1f" (divFloat (mulInt .Stats.CacheHits 100) .Stats.TotalQueries)}}% hit rate
+            </p>
+            {{end}}
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-medium text-gray-500">Cache Misses</h3>
+            <p class="mt-2 text-3xl font-semibold text-orange-600">{{.Stats.CacheMisses}}</p>
+            {{if gt .Stats.TotalQueries 0}}
+            <p class="mt-1 text-sm text-gray-500">
+                {{printf "%.1f" (divFloat (mulInt .Stats.CacheMisses 100) .Stats.TotalQueries)}}% miss rate
+            </p>
+            {{end}}
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-medium text-gray-500">Unique Clients</h3>
+            <p class="mt-2 text-3xl font-semibold text-indigo-600">{{.Stats.UniqueClients}}</p>
+        </div>
+    </div>
+</div>
+{{end}}

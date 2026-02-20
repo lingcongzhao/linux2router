@@ -1,0 +1,38 @@
+{{define "dns_query_logs"}}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Type</th>
+                <th>Domain</th>
+                <th>Client</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Logs}}
+            <tr>
+                <td class="text-sm text-gray-600">{{.Timestamp}}</td>
+                <td>
+                    {{if eq .QueryType "query"}}
+                    <span class="badge badge-blue">Query</span>
+                    {{else if eq .QueryType "cached"}}
+                    <span class="badge badge-green">Cached</span>
+                    {{else}}
+                    <span class="badge badge-gray">{{.QueryType}}</span>
+                    {{end}}
+                </td>
+                <td class="font-mono text-sm">{{.Domain}}</td>
+                <td class="font-mono text-sm">{{.QueryFrom}}</td>
+                <td class="text-sm text-gray-600">{{.Result}}</td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="5" class="text-center text-gray-500">No query logs available</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"linuxtorouter/internal/auth"
 	"linuxtorouter/internal/config"
@@ -92,6 +93,7 @@ func main() {
 	ipsetService := services.NewIPSetService(cfg.ConfigDir)
 	tunnelService := services.NewTunnelService(cfg.ConfigDir)
 	netnsService := services.NewNetnsService(cfg.ConfigDir)
+	dnsmasqService := services.NewDnsmasqService(cfg.ConfigDir)
 	persistService := services.NewPersistService(cfg.ConfigDir)
 
 	// Ensure default admin user exists
@@ -120,6 +122,7 @@ func main() {
 	ipsetHandler := handlers.NewIPSetHandler(templates, ipsetService, userService)
 	tunnelHandler := handlers.NewTunnelHandler(templates, tunnelService, userService)
 	netnsHandler := handlers.NewNetnsHandler(templates, netnsService, iptablesService, routeService, ruleService, tunnelService, userService)
+	dnsmasqHandler := handlers.NewDnsmasqHandler(templates, dnsmasqService, ipsetService, userService)
 	settingsHandler := handlers.NewSettingsHandler(templates, userService, persistService, iptablesService, routeService, ruleService, ipsetService, tunnelService)
 
 	// Initialize middleware
@@ -322,6 +325,38 @@ func main() {
 		r.Get("/settings/export", settingsHandler.ExportConfig)
 		r.Post("/settings/import", settingsHandler.ImportConfig)
 
+		// DHCP Server
+		r.Get("/dhcp", dnsmasqHandler.DHCPPage)
+		r.Get("/dhcp/status", dnsmasqHandler.GetDHCPStatus)
+		r.Get("/dhcp/controls", dnsmasqHandler.GetDHCPControls)
+		r.Get("/dhcp/config", dnsmasqHandler.GetDHCPConfig)
+		r.Post("/dhcp/config", dnsmasqHandler.UpdateDHCPConfig)
+		r.Get("/dhcp/static-leases", dnsmasqHandler.GetStaticLeases)
+		r.Post("/dhcp/static-leases", dnsmasqHandler.AddStaticLease)
+		r.Delete("/dhcp/static-leases/{mac}", dnsmasqHandler.RemoveStaticLease)
+		r.Get("/dhcp/leases", dnsmasqHandler.GetDHCPLeases)
+		r.Post("/dhcp/start", dnsmasqHandler.StartService)
+		r.Post("/dhcp/stop", dnsmasqHandler.StopService)
+		r.Post("/dhcp/restart", dnsmasqHandler.RestartService)
+
+		// DNS Server
+		r.Get("/dns", dnsmasqHandler.DNSPage)
+		r.Get("/dns/status", dnsmasqHandler.GetDNSStatus)
+		r.Get("/dns/controls", dnsmasqHandler.GetDNSControls)
+		r.Get("/dns/config", dnsmasqHandler.GetDNSConfig)
+		r.Post("/dns/config", dnsmasqHandler.UpdateDNSConfig)
+		r.Get("/dns/custom-hosts", dnsmasqHandler.GetCustomHosts)
+		r.Post("/dns/custom-hosts", dnsmasqHandler.AddCustomHost)
+		r.Delete("/dns/custom-hosts/{hostname}", dnsmasqHandler.RemoveCustomHost)
+		r.Get("/dns/domain-rules", dnsmasqHandler.GetDomainRules)
+		r.Post("/dns/domain-rules", dnsmasqHandler.AddDomainRule)
+		r.Delete("/dns/domain-rules/{domain}", dnsmasqHandler.RemoveDomainRule)
+		r.Get("/dns/query-logs", dnsmasqHandler.GetDNSQueryLogs)
+		r.Get("/dns/statistics", dnsmasqHandler.GetDNSStatistics)
+		r.Post("/dns/start", dnsmasqHandler.StartService)
+		r.Post("/dns/stop", dnsmasqHandler.StopService)
+		r.Post("/dns/restart", dnsmasqHandler.RestartService)
+
 		// Admin-only routes
 		r.Group(func(r chi.Router) {
 			r.Use(authMiddleware.RequireAdmin)
@@ -391,6 +426,9 @@ func loadTemplates(templatesDir string) (*TemplateRegistry, error) {
 		"formatBytes": formatBytes,
 		"dict":        dict,
 		"uint64":      toUint64,
+		"mulInt":      mulInt,
+		"divFloat":    divFloat,
+		"formatTime":  formatTime,
 	}
 
 	registry := NewTemplateRegistry(funcMap)
@@ -503,4 +541,23 @@ func toUint64(v int) uint64 {
 		return 0
 	}
 	return uint64(v)
+}
+
+func mulInt(a, b int) int {
+	return a * b
+}
+
+func divFloat(a, b int) float64 {
+	if b == 0 {
+		return 0
+	}
+	return float64(a) / float64(b)
+}
+
+func formatTime(timestamp int64) string {
+	if timestamp == 0 {
+		return "Never"
+	}
+	t := time.Unix(timestamp, 0)
+	return t.Format("2006-01-02 15:04:05")
 }

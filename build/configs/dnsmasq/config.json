@@ -1,0 +1,25 @@
+{
+  "dhcp": {
+    "enabled": true,
+    "interface": "veth0",
+    "start_ip": "192.168.10.100",
+    "end_ip": "192.168.10.200",
+    "lease_time": "12h",
+    "gateway": "192.168.10.1",
+    "dns_servers": [
+      "8.8.8.8"
+    ],
+    "static_leases": []
+  },
+  "dns": {
+    "enabled": true,
+    "port": 53,
+    "upstream_servers": [
+      "8.8.8.8",
+      "8.8.4.4"
+    ],
+    "cache_size": 1000,
+    "domain_rules": [],
+    "custom_hosts": []
+  }
+}

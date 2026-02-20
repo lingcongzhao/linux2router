@@ -1,0 +1,48 @@
+{{define "dns_domain_rules"}}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Domain</th>
+                <th>Custom DNS</th>
+                <th>IPSet Integration</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Rules}}
+            <tr>
+                <td class="font-medium">{{.Domain}}</td>
+                <td>
+                    {{if .CustomDNS}}
+                    <span class="font-mono text-sm">{{.CustomDNS}}</span>
+                    {{else}}
+                    <span class="text-gray-400">Default</span>
+                    {{end}}
+                </td>
+                <td>
+                    {{if .IPSetName}}
+                    <span class="badge badge-blue">{{.IPSetName}}</span>
+                    {{else}}
+                    <span class="text-gray-400">-</span>
+                    {{end}}
+                </td>
+                <td class="text-right">
+                    <button class="btn btn-sm btn-danger"
+                            data-action="/dns/domain-rules/{{.Domain}}"
+                            data-method="DELETE"
+                            data-message="Remove domain rule for {{.Domain}}?"
+                            onclick="showActionModal(this)">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="4" class="text-center text-gray-500">No domain rules defined</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

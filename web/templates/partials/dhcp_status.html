@@ -1,0 +1,25 @@
+{{define "dhcp_status"}}
+<!-- Service Status -->
+<div class="card">
+    <div class="card-body">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Service Status</h3>
+                <p class="mt-1">
+                    <span class="{{if eq .Status "active"}}badge badge-green{{else}}badge badge-red{{end}}">
+                        {{if eq .Status "active"}}Running{{else}}Stopped{{end}}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Configuration</h3>
+                <p class="mt-1">
+                    <span class="{{if .Config.Enabled}}badge badge-blue{{else}}badge badge-gray{{end}}">
+                        {{if .Config.Enabled}}Enabled{{else}}Disabled{{end}}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

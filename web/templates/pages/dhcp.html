@@ -1,0 +1,182 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                DHCP Server
+            </h2>
+        </div>
+        <div id="dhcp-controls-container">
+            {{template "dhcp_controls" .}}
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div id="dhcp-status-container">
+        {{template "dhcp_status" .}}
+    </div>
+
+    <!-- Info Card -->
+    <div class="card">
+        <div class="card-body">
+            <p class="text-sm text-gray-600">
+                The DHCP server automatically assigns IP addresses to devices on your network. Configure the IP range, 
+                gateway, DNS servers, and create static leases (reservations) for specific devices by MAC address.
+            </p>
+        </div>
+    </div>
+
+    <!-- DHCP Configuration Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">DHCP Configuration</h3>
+        </div>
+        <div class="card-body">
+            <form hx-post="/dhcp/config" hx-target="#alert-container" hx-swap="innerHTML">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enabled" id="dhcp-enabled" 
+                                   {{if .Config.Enabled}}checked{{end}}
+                                   class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                            <label for="dhcp-enabled" class="ml-2 text-sm font-medium text-gray-700">
+                                Enable DHCP Server
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Interface</label>
+                        <select name="interface" required class="form-select">
+                            <option value="">Select interface...</option>
+                            {{range .Interfaces}}
+                            <option value="{{.}}" {{if eq . $.Config.Interface}}selected{{end}}>{{.}}</option>
+                            {{end}}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Network interface to serve DHCP on</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Lease Time</label>
+                        <input type="text" name="lease_time" value="{{.Config.LeaseTime}}" 
+                               class="form-input" placeholder="12h" required
+                               pattern="[0-9]+[hHdDwWmM]">
+                        <p class="text-xs text-gray-500 mt-1">Format: 12h, 24h, 7d, etc.</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Start IP Address</label>
+                        <input type="text" name="start_ip" value="{{.Config.StartIP}}" 
+                               class="form-input" placeholder="192.168.1.100" required>
+                        <p class="text-xs text-gray-500 mt-1">First IP in DHCP range</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">End IP Address</label>
+                        <input type="text" name="end_ip" value="{{.Config.EndIP}}" 
+                               class="form-input" placeholder="192.168.1.200" required>
+                        <p class="text-xs text-gray-500 mt-1">Last IP in DHCP range</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Gateway (Optional)</label>
+                        <input type="text" name="gateway" value="{{.Config.Gateway}}" 
+                               class="form-input" placeholder="192.168.1.1">
+                        <p class="text-xs text-gray-500 mt-1">Default gateway for clients</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">DNS Servers (Optional)</label>
+                        <input type="text" name="dns_servers" 
+                               value="{{range $i, $dns := .Config.DNSServers}}{{if $i}},{{end}}{{$dns}}{{end}}" 
+                               class="form-input" placeholder="8.8.8.8,8.8.4.4">
+                        <p class="text-xs text-gray-500 mt-1">Comma-separated DNS server IPs</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Static Leases (Reservations) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Static Leases (Reservations)</h3>
+            <button class="btn btn-sm btn-primary" 
+                    onclick="document.getElementById('add-lease-modal').classList.remove('hidden')">
+                + Add Reservation
+            </button>
+        </div>
+        <div id="static-leases-content"
+             hx-get="/dhcp/static-leases"
+             hx-trigger="every 10s, refresh from:body"
+             hx-swap="innerHTML">
+            {{template "dhcp_static_leases" (dict "Leases" .Config.StaticLeases)}}
+        </div>
+    </div>
+
+    <!-- Active Leases -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Active DHCP Leases</h3>
+        </div>
+        <div id="active-leases-content"
+             hx-get="/dhcp/leases"
+             hx-trigger="every 10s, refresh from:body"
+             hx-swap="innerHTML">
+            <!-- Active leases will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Add Static Lease Modal -->
+    <div id="add-lease-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="modal-backdrop" onclick="document.getElementById('add-lease-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <div class="absolute right-0 top-0 pr-4 pt-4">
+                    <button type="button" onclick="document.getElementById('add-lease-modal').classList.add('hidden')" 
+                            class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Add Static Lease</h3>
+                <form hx-post="/dhcp/static-leases" hx-target="#alert-container" hx-swap="innerHTML"
+                      onsubmit="setTimeout(() => { document.getElementById('add-lease-modal').classList.add('hidden'); htmx.trigger('body', 'refresh'); }, 100)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">MAC Address</label>
+                            <input type="text" name="mac" required class="form-input" 
+                                   pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})"
+                                   placeholder="00:11:22:33:44:55">
+                            <p class="text-xs text-gray-500 mt-1">Device MAC address</p>
+                        </div>
+                        <div>
+                            <label class="form-label">IP Address</label>
+                            <input type="text" name="ip" required class="form-input" placeholder="192.168.1.50">
+                            <p class="text-xs text-gray-500 mt-1">Reserved IP address</p>
+                        </div>
+                        <div>
+                            <label class="form-label">Hostname (Optional)</label>
+                            <input type="text" name="hostname" class="form-input" placeholder="my-device">
+                            <p class="text-xs text-gray-500 mt-1">Optional hostname for the device</p>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('add-lease-modal').classList.add('hidden')" 
+                                class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Reservation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{template "base" .}}
