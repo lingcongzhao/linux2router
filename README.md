@@ -21,6 +21,20 @@ A comprehensive web-based GUI application for managing Linux networking on Ubunt
   - Connection state matching (NEW, ESTABLISHED, RELATED, etc.)
   - Chain policy configuration (ACCEPT/DROP)
 
+### DNS Server
+- **Upstream DNS** - Configure global upstream DNS servers
+- **Custom Hosts** - Map hostnames to custom IP addresses  
+- **Domain-based Routing** - Forward specific domains to different DNS servers
+- **IPSet Integration** - Automatically populate IPSets with resolved IPs for firewall rules
+- **Logging** - DNS query logging for monitoring
+
+### DHCP Server
+- **Server Control** - Start/stop DHCP service
+- **DHCP Ranges** - Configure IP address pools
+- **Static Reservations** - Reserve IP addresses for specific MAC addresses
+- **Active Leases** - View currently assigned IP addresses
+- **Options** - Configure DHCP options (gateway, DNS, domain, lease time)
+
 ### Tunnel Support
 - **GRE Tunnels** - GRE tunnels with keys and TTL
 - **VXLAN Tunnels** - VNI-based Layer 2 virtualization with MAC configuration
@@ -41,6 +55,20 @@ A comprehensive web-based GUI application for managing Linux networking on Ubunt
 - Add/remove entries
 - Flush sets
 - Use in firewall rules with match direction
+
+### DNS Server
+- **Upstream DNS** - Configure global upstream DNS servers
+- **Custom Hosts** - Map hostnames to custom IP addresses
+- **Domain-based Routing** - Forward specific domains to different DNS servers
+- **IPSet Integration** - Automatically populate IPSets with resolved IPs for firewall rules
+- **Logging** - DNS query logging for monitoring
+
+### DHCP Server
+- **Server Control** - Start/stop DHCP service
+- **DHCP Ranges** - Configure IP address pools
+- **Static Reservations** - Reserve IP addresses for specific MAC addresses
+- **Active Leases** - View currently assigned IP addresses
+- **Options** - Configure DHCP options (gateway, DNS, domain, lease time)
 
 ### System
 - **Authentication** - Session-based login with bcrypt hashing
@@ -137,6 +165,8 @@ Tunnels
 Firewall
 ├── Iptables      - Firewall rule management
 ├── IP Sets       - IP set management
+DNS               - DNS server and domain rules
+DHCP              - DHCP server and leases
 Routing
 ├── Routes        - Routing table management
 ├── Policy        - Policy routing rules
@@ -159,6 +189,8 @@ linuxtorouter/
 │   ├── handlers/                # HTTP request handlers
 │   │   ├── auth.go
 │   │   ├── dashboard.go
+│   │   ├── dhcp.go
+│   │   ├── dns.go
 │   │   ├── firewall.go
 │   │   ├── interfaces.go
 │   │   ├── ipset.go
@@ -171,6 +203,8 @@ linuxtorouter/
 │   ├── middleware/             # Auth middleware
 │   │   └── auth.go
 │   ├── models/                  # Data models
+│   │   ├── dhcp.go
+│   │   ├── dns.go
 │   │   ├── firewall.go
 │   │   ├── interface.go
 │   │   ├── ipset.go
@@ -180,6 +214,8 @@ linuxtorouter/
 │   │   ├── tunnel.go
 │   │   └── user.go
 │   └── services/                # System command wrappers
+│       ├── dhcp.go
+│       ├── dnsmasq.go
 │       ├── iptables.go
 │       ├── ipset.go
 │       ├── iproute.go
@@ -202,7 +238,7 @@ linuxtorouter/
 - **Backend**: Go with chi router
 - **Frontend**: Server-side rendered templates with HTMX
 - **Database**: SQLite (users, audit logs)
-- **System APIs**: netlink (interfaces), iproute2 (routes, rules), iptables
+- **System APIs**: netlink (interfaces), iproute2 (routes, rules), iptables, dnsmasq (DNS/DHCP)
 
 ## Dependencies
 
@@ -212,6 +248,7 @@ github.com/gorilla/sessions       - Session management
 github.com/mattn/go-sqlite3       - SQLite driver
 github.com/vishvananda/netlink    - Netlink API
 golang.org/x/crypto               - Bcrypt password hashing
+dnsmasq                           - DNS/DHCP server (system package)
 ```
 
 ## Security Notes
