@@ -257,6 +257,11 @@ ls -la /var/lib/router-gui/configs/netns/{namespace}/
 
 6. **Code Cleanup**: Removed unused `extractComment` function from `internal/services/iptables.go`
 
+7. **Bug Fix**: Button stuck on "Loading..." on first click
+   - **Root Cause**: HTMX event listeners were not wrapped in `DOMContentLoaded`, causing them to not attach properly on first page load
+   - **Fix**: Wrapped HTMX event listeners in `DOMContentLoaded` in `web/static/js/app.js`
+   - **Additional Fix**: Added `type="button"` to the Save All Configurations button to prevent submit behavior
+
 ---
 
 ## Files Modified
@@ -264,3 +269,5 @@ ls -la /var/lib/router-gui/configs/netns/{namespace}/
 - `internal/handlers/settings.go` - Added missing service calls for Save All and Import
 - `internal/services/iptables.go` - Removed dead code (extractComment function)
 - `cmd/server/main.go` - Added missing route for namespace tunnel save, updated handler initialization
+- `web/static/js/app.js` - Fixed HTMX event listener timing issue
+- `web/templates/pages/settings.html` - Added type="button" to Save All button

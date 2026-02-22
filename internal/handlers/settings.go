@@ -355,6 +355,8 @@ func (h *SettingsHandler) SaveAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.userService.LogAction(&user.ID, "config_save_all", "", getClientIP(r))
+
+	w.Header().Set("HX-Trigger", "refresh")
 	h.renderAlert(w, "success", "All configurations saved successfully")
 }
 
