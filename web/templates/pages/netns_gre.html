@@ -6,16 +6,29 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <a href="/netns/{{.NamespaceName}}" class="text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">GRE Tunnels - {{.NamespaceName}}</h1>
-                <p class="mt-1 text-sm text-gray-500">Generic Routing Encapsulation tunnels in namespace {{.NamespaceName}}</p>
-            </div>
+        <div class="min-w-0 flex-1">
+            <nav class="flex mb-2" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2">
+                    <li>
+                        <a href="/netns" class="text-sm text-gray-500 hover:text-gray-700">netns</a>
+                    </li>
+                    <li>
+                        <svg class="h-5 w-5 flex-shrink-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                        </svg>
+                    </li>
+                    <li>
+                        <a href="/netns/{{.NamespaceName}}" class="text-sm text-gray-500 hover:text-gray-700">{{.NamespaceName}}</a>
+                    </li>
+                    <li>
+                        <svg class="h-5 w-5 flex-shrink-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                        </svg>
+                    </li>
+                    <li class="text-sm font-medium text-gray-900">gre</li>
+                </ol>
+            </nav>
+            <h1 class="text-2xl font-bold text-gray-900">GRE Tunnels</h1>
         </div>
         <div class="flex space-x-3">
             <button onclick="document.getElementById('addModal').classList.remove('hidden')" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
@@ -38,8 +51,10 @@
 
     <!-- Tunnels Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div id="tunnel-table" hx-get="/netns/{{.NamespaceName}}/tunnels/gre/list" hx-trigger="load, refresh from:body, every 10s" hx-swap="innerHTML">
-            {{template "netns_gre_table" .}}
+        <div class="table-container" style="overflow-x: auto;">
+            <div id="tunnel-table" hx-get="/netns/{{.NamespaceName}}/tunnels/gre/list" hx-trigger="load, refresh from:body, every 10s" hx-swap="innerHTML">
+                {{template "netns_gre_table" .}}
+            </div>
         </div>
     </div>
 </div>
