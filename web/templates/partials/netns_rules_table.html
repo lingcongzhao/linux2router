@@ -25,8 +25,8 @@
                     <td>{{if .IIF}}{{.IIF}}{{else}}-{{end}}</td>
                     <td>{{if .OIF}}{{.OIF}}{{else}}-{{end}}</td>
                     <td>
-                        {{if .Table}}
-                        <span class="badge badge-blue">lookup {{.Table}}</span>
+                        {{if .TableName}}
+                        <span class="badge badge-blue">lookup {{.TableName}}</span>
                         {{else if .Action}}
                         <span class="badge badge-yellow">{{.Action}}</span>
                         {{end}}

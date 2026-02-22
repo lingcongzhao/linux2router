@@ -5,7 +5,8 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VNI</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Local</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remote</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remote/Group</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAC</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Port</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Addresses</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
@@ -20,6 +21,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{{.VNI}}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{{if .Local}}{{.Local}}{{else}}-{{end}}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{{if .Remote}}{{.Remote}}{{else}}-{{end}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{{if .MAC}}{{.MAC}}{{else}}-{{end}}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{{.DstPort}}</td>
             <td class="px-6 py-4 text-sm text-gray-500 font-mono" style="max-width: 140px;">{{if .Addresses}}{{range $i, $addr := .Addresses}}{{if $i}}<br>{{end}}<span style="display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{$addr}}">{{$addr}}</span>{{end}}{{else}}-{{end}}</td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -45,7 +47,7 @@
         {{end}}
         {{else}}
         <tr>
-            <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
+            <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
                 No VXLAN tunnels configured
             </td>
         </tr>

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -50,11 +51,34 @@ func (h *RulesHandler) List(w http.ResponseWriter, r *http.Request) {
 		ifaceNames = append(ifaceNames, iface.Name)
 	}
 
+	tableMap := make(map[string]string)
+	for _, t := range tables {
+		tableMap[fmt.Sprintf("%d", t.ID)] = t.Name
+	}
+
+	type RuleWithTableName struct {
+		models.IPRule
+		TableName string
+	}
+
+	var rulesWithNames []RuleWithTableName
+	for _, rule := range rules {
+		rn := RuleWithTableName{IPRule: rule}
+		if rule.Table != "" {
+			if name, ok := tableMap[rule.Table]; ok {
+				rn.TableName = name
+			} else {
+				rn.TableName = rule.Table
+			}
+		}
+		rulesWithNames = append(rulesWithNames, rn)
+	}
+
 	data := map[string]interface{}{
 		"Title":      "IP Rules",
 		"ActivePage": "rules",
 		"User":       user,
-		"Rules":      rules,
+		"Rules":      rulesWithNames,
 		"Tables":     tables,
 		"Interfaces": ifaceNames,
 		"NextID":     nextID,
@@ -73,8 +97,33 @@ func (h *RulesHandler) GetRules(w http.ResponseWriter, r *http.Request) {
 		rules = []models.IPRule{}
 	}
 
+	tables, _ := h.routeService.GetRoutingTables()
+
+	tableMap := make(map[string]string)
+	for _, t := range tables {
+		tableMap[fmt.Sprintf("%d", t.ID)] = t.Name
+	}
+
+	type RuleWithTableName struct {
+		models.IPRule
+		TableName string
+	}
+
+	var rulesWithNames []RuleWithTableName
+	for _, rule := range rules {
+		rn := RuleWithTableName{IPRule: rule}
+		if rule.Table != "" {
+			if name, ok := tableMap[rule.Table]; ok {
+				rn.TableName = name
+			} else {
+				rn.TableName = rule.Table
+			}
+		}
+		rulesWithNames = append(rulesWithNames, rn)
+	}
+
 	data := map[string]interface{}{
-		"Rules": rules,
+		"Rules": rulesWithNames,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "rule_table.html", data); err != nil {

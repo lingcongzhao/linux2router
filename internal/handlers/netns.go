@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -715,13 +716,36 @@ func (h *NetnsHandler) ListRules(w http.ResponseWriter, r *http.Request) {
 		ifNames = append(ifNames, iface.Name)
 	}
 
+	tableMap := make(map[string]string)
+	for _, t := range tables {
+		tableMap[fmt.Sprintf("%d", t.ID)] = t.Name
+	}
+
+	type RuleWithTableName struct {
+		models.IPRule
+		TableName string
+	}
+
+	var rulesWithNames []RuleWithTableName
+	for _, rule := range rules {
+		rn := RuleWithTableName{IPRule: rule}
+		if rule.Table != "" {
+			if name, ok := tableMap[rule.Table]; ok {
+				rn.TableName = name
+			} else {
+				rn.TableName = rule.Table
+			}
+		}
+		rulesWithNames = append(rulesWithNames, rn)
+	}
+
 	data := map[string]interface{}{
 		"Title":         "Policies - " + namespace,
 		"ActivePage":    "netns",
 		"User":          user,
 		"Namespace":     ns,
 		"NamespaceName": namespace,
-		"Rules":         rules,
+		"Rules":         rulesWithNames,
 		"Tables":        tables,
 		"NextID":        nextID,
 		"Interfaces":    ifNames,
@@ -743,9 +767,34 @@ func (h *NetnsHandler) GetRules(w http.ResponseWriter, r *http.Request) {
 		rules = []models.IPRule{}
 	}
 
+	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
+
+	tableMap := make(map[string]string)
+	for _, t := range tables {
+		tableMap[fmt.Sprintf("%d", t.ID)] = t.Name
+	}
+
+	type RuleWithTableName struct {
+		models.IPRule
+		TableName string
+	}
+
+	var rulesWithNames []RuleWithTableName
+	for _, rule := range rules {
+		rn := RuleWithTableName{IPRule: rule}
+		if rule.Table != "" {
+			if name, ok := tableMap[rule.Table]; ok {
+				rn.TableName = name
+			} else {
+				rn.TableName = rule.Table
+			}
+		}
+		rulesWithNames = append(rulesWithNames, rn)
+	}
+
 	data := map[string]interface{}{
 		"NamespaceName": namespace,
-		"Rules":         rules,
+		"Rules":         rulesWithNames,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "netns_rules_table.html", data); err != nil {
