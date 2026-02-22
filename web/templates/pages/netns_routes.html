@@ -91,7 +91,7 @@
                             <label class="form-label">Routing Table</label>
                             <select name="table" class="form-select">
                                 {{range .Tables}}
-                                <option value="{{.Name}}" {{if eq .Name $.CurrentTable}}selected{{end}}>{{.Name}}</option>
+                                <option value="{{.ID}}" {{if eq (printf "%d" .ID) $.CurrentTable}}selected{{end}}>{{.Name}}</option>
                                 {{end}}
                             </select>
                         </div>

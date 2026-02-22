@@ -563,18 +563,27 @@ func (h *NetnsHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	table := r.URL.Query().Get("table")
-	if table == "" {
-		table = "main"
+	tableParam := r.URL.Query().Get("table")
+	if tableParam == "" {
+		tableParam = "main"
 	}
 
-	routes, err := h.routeService.ListRoutesInNamespace(table, namespace)
+	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
+
+	// Convert table name to ID if needed
+	tableID := tableParam
+	for _, t := range tables {
+		if t.Name == tableParam {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
+	routes, err := h.routeService.ListRoutesInNamespace(tableID, namespace)
 	if err != nil {
 		log.Printf("Failed to list routes in namespace: %v", err)
 		routes = []models.Route{}
 	}
-
-	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
 
 	interfaces, _ := h.netnsService.GetNamespaceInterfaceDetails(namespace)
 	var ifNames []string
@@ -588,7 +597,7 @@ func (h *NetnsHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 		"User":          user,
 		"Namespace":     ns,
 		"NamespaceName": namespace,
-		"CurrentTable":  table,
+		"CurrentTable":  tableParam,
 		"Tables":        tables,
 		"Routes":        routes,
 		"Interfaces":    ifNames,
@@ -603,13 +612,23 @@ func (h *NetnsHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 // GetRoutes returns routes for HTMX refresh
 func (h *NetnsHandler) GetRoutes(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "name")
-	table := r.URL.Query().Get("table")
+	tableParam := r.URL.Query().Get("table")
 
-	if table == "" {
-		table = "main"
+	if tableParam == "" {
+		tableParam = "main"
 	}
 
-	routes, err := h.routeService.ListRoutesInNamespace(table, namespace)
+	// Convert table name to ID if needed
+	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
+	tableID := tableParam
+	for _, t := range tables {
+		if t.Name == tableParam {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
+	routes, err := h.routeService.ListRoutesInNamespace(tableID, namespace)
 	if err != nil {
 		log.Printf("Failed to list routes: %v", err)
 		routes = []models.Route{}
@@ -617,7 +636,7 @@ func (h *NetnsHandler) GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{
 		"NamespaceName": namespace,
-		"CurrentTable":  table,
+		"CurrentTable":  tableParam,
 		"Routes":        routes,
 	}
 
@@ -672,11 +691,23 @@ func (h *NetnsHandler) DeleteRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tableName := r.FormValue("table")
+
+	// Convert table name to ID if needed
+	tables, _ := h.routeService.GetRoutingTablesForNamespace(namespace)
+	tableID := tableName
+	for _, t := range tables {
+		if t.Name == tableName {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
 	input := models.RouteInput{
 		Destination: r.FormValue("destination"),
 		Gateway:     r.FormValue("gateway"),
 		Interface:   r.FormValue("interface"),
-		Table:       r.FormValue("table"),
+		Table:       tableID,
 	}
 
 	if err := h.routeService.DeleteRouteInNamespace(input, namespace); err != nil {

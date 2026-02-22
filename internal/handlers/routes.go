@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -30,18 +31,27 @@ func NewRoutesHandler(templates TemplateExecutor, routeService *services.IPRoute
 
 func (h *RoutesHandler) List(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
-	table := r.URL.Query().Get("table")
-	if table == "" {
-		table = "main"
+	tableParam := r.URL.Query().Get("table")
+	if tableParam == "" {
+		tableParam = "main"
 	}
 
-	routes, err := h.routeService.ListRoutes(table)
+	tables, _ := h.routeService.GetRoutingTables()
+
+	// Convert table name to ID if needed
+	tableID := tableParam
+	for _, t := range tables {
+		if t.Name == tableParam {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
+	routes, err := h.routeService.ListRoutes(tableID)
 	if err != nil {
 		log.Printf("Failed to list routes: %v", err)
 		routes = []models.Route{}
 	}
-
-	tables, _ := h.routeService.GetRoutingTables()
 
 	interfaces, _ := h.netlinkService.ListInterfaces()
 	var ifaceNames []string
@@ -56,7 +66,7 @@ func (h *RoutesHandler) List(w http.ResponseWriter, r *http.Request) {
 		"ActivePage":   "routes",
 		"User":         user,
 		"Routes":       routes,
-		"CurrentTable": table,
+		"CurrentTable": tableParam,
 		"Tables":       tables,
 		"Interfaces":   ifaceNames,
 		"IPForwarding": ipForwarding,
@@ -69,12 +79,22 @@ func (h *RoutesHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoutesHandler) GetRoutes(w http.ResponseWriter, r *http.Request) {
-	table := r.URL.Query().Get("table")
-	if table == "" {
-		table = "main"
+	tableParam := r.URL.Query().Get("table")
+	if tableParam == "" {
+		tableParam = "main"
 	}
 
-	routes, err := h.routeService.ListRoutes(table)
+	// Convert table name to ID if needed
+	tables, _ := h.routeService.GetRoutingTables()
+	tableID := tableParam
+	for _, t := range tables {
+		if t.Name == tableParam {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
+	routes, err := h.routeService.ListRoutes(tableID)
 	if err != nil {
 		log.Printf("Failed to list routes: %v", err)
 		routes = []models.Route{}
@@ -82,7 +102,7 @@ func (h *RoutesHandler) GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{
 		"Routes":       routes,
-		"CurrentTable": table,
+		"CurrentTable": tableParam,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "route_table.html", data); err != nil {
@@ -137,21 +157,31 @@ func (h *RoutesHandler) DeleteRoute(w http.ResponseWriter, r *http.Request) {
 	destination := r.URL.Query().Get("destination")
 	gateway := r.URL.Query().Get("gateway")
 	iface := r.URL.Query().Get("interface")
-	table := r.URL.Query().Get("table")
+	tableName := r.URL.Query().Get("table")
 
 	if destination == "" {
 		h.renderAlert(w, "error", "Destination is required")
 		return
 	}
 
-	if err := h.routeService.DeleteRoute(destination, gateway, iface, table); err != nil {
+	// Convert table name to ID if needed
+	tables, _ := h.routeService.GetRoutingTables()
+	tableID := tableName
+	for _, t := range tables {
+		if t.Name == tableName {
+			tableID = fmt.Sprintf("%d", t.ID)
+			break
+		}
+	}
+
+	if err := h.routeService.DeleteRoute(destination, gateway, iface, tableID); err != nil {
 		log.Printf("Failed to delete route: %v", err)
 		h.renderAlert(w, "error", "Failed to delete route: "+err.Error())
 		return
 	}
 
 	h.userService.LogAction(&user.ID, "route_delete",
-		"Dest: "+destination+", Table: "+table, getClientIP(r))
+		"Dest: "+destination+", Table: "+tableName, getClientIP(r))
 	h.renderAlert(w, "success", "Route deleted successfully")
 }
 
