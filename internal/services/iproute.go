@@ -226,7 +226,7 @@ func (s *IPRouteService) GetRoutingTables() ([]models.RoutingTable, error) {
 		}
 	}
 
-	// Sort tables: reserved first (255, 254, 253), then custom by ID ascending
+	// Sort tables: reserved first (255, 254, 253), then custom by ID descending
 	sort.Slice(tables, func(i, j int) bool {
 		// Reserved tables first
 		if tables[i].ID >= 253 && tables[j].ID < 253 {
@@ -235,8 +235,8 @@ func (s *IPRouteService) GetRoutingTables() ([]models.RoutingTable, error) {
 		if tables[i].ID < 253 && tables[j].ID >= 253 {
 			return false
 		}
-		// Within same category, sort by ID ascending
-		return tables[i].ID < tables[j].ID
+		// Within same category, sort by ID descending
+		return tables[i].ID > tables[j].ID
 	})
 
 	return tables, nil
@@ -694,9 +694,9 @@ func (s *IPRouteService) GetRoutingTablesForNamespace(namespace string) ([]model
 		})
 	}
 
-	// Sort custom tables by ID ascending
+	// Sort custom tables by ID descending
 	sort.Slice(customTables, func(i, j int) bool {
-		return customTables[i].ID < customTables[j].ID
+		return customTables[i].ID > customTables[j].ID
 	})
 
 	// Prepend default tables, then add custom tables
