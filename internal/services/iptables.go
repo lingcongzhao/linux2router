@@ -252,38 +252,6 @@ func (s *IPTablesService) parseRuleLine(line string) *models.FirewallRule {
 	return rule
 }
 
-// extractComment separates comment from extra options
-// Returns (options without comment, comment text including /* and */)
-func extractComment(extra string) (string, string) {
-	startIdx := strings.Index(extra, "/*")
-	if startIdx == -1 {
-		return extra, ""
-	}
-
-	endIdx := strings.LastIndex(extra, "*/")
-	if endIdx == -1 || endIdx < startIdx {
-		return extra, ""
-	}
-
-	// Extract comment text (including /* and */)
-	comment := strings.TrimSpace(extra[startIdx : endIdx+2])
-
-	// Build options without comment
-	options := strings.TrimSpace(extra[:startIdx])
-	if endIdx+2 < len(extra) {
-		remaining := strings.TrimSpace(extra[endIdx+2:])
-		if remaining != "" {
-			if options != "" {
-				options = options + " " + remaining
-			} else {
-				options = remaining
-			}
-		}
-	}
-
-	return options, comment
-}
-
 func (s *IPTablesService) AddRule(input models.FirewallRuleInput) error {
 	args := s.buildRuleArgs(input)
 

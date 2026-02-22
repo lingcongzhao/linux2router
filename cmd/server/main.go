@@ -123,7 +123,7 @@ func main() {
 	tunnelHandler := handlers.NewTunnelHandler(templates, tunnelService, userService)
 	netnsHandler := handlers.NewNetnsHandler(templates, netnsService, iptablesService, routeService, ruleService, tunnelService, userService)
 	dnsmasqHandler := handlers.NewDnsmasqHandler(templates, dnsmasqService, ipsetService, userService)
-	settingsHandler := handlers.NewSettingsHandler(templates, userService, persistService, iptablesService, routeService, ruleService, ipsetService, tunnelService)
+	settingsHandler := handlers.NewSettingsHandler(templates, userService, persistService, iptablesService, routeService, ruleService, ipsetService, tunnelService, netnsService, dnsmasqService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(sessionManager, userService)
@@ -315,6 +315,7 @@ func main() {
 		r.Delete("/netns/{name}/tunnels/wireguard/{tunnel}/addresses", netnsHandler.RemoveWireGuardAddressInNamespace)
 
 		// Common tunnel actions
+		r.Post("/netns/{name}/tunnels/save", netnsHandler.SaveTunnels)
 		r.Post("/netns/{name}/tunnels/{tunnel}/up", netnsHandler.SetTunnelUp)
 		r.Post("/netns/{name}/tunnels/{tunnel}/down", netnsHandler.SetTunnelDown)
 

@@ -22,6 +22,8 @@ type SettingsHandler struct {
 	ruleService     *services.IPRuleService
 	ipsetService    *services.IPSetService
 	tunnelService   *services.TunnelService
+	netnsService    *services.NetnsService
+	dnsmasqService  *services.DnsmasqService
 }
 
 func NewSettingsHandler(
@@ -33,6 +35,8 @@ func NewSettingsHandler(
 	ruleService *services.IPRuleService,
 	ipsetService *services.IPSetService,
 	tunnelService *services.TunnelService,
+	netnsService *services.NetnsService,
+	dnsmasqService *services.DnsmasqService,
 ) *SettingsHandler {
 	return &SettingsHandler{
 		templates:       templates,
@@ -43,6 +47,8 @@ func NewSettingsHandler(
 		ruleService:     ruleService,
 		ipsetService:    ipsetService,
 		tunnelService:   tunnelService,
+		netnsService:    netnsService,
+		dnsmasqService:  dnsmasqService,
 	}
 }
 
@@ -264,6 +270,10 @@ func (h *SettingsHandler) ImportConfig(w http.ResponseWriter, r *http.Request) {
 	// Apply imported configurations immediately
 	var restoreErrors []string
 
+	if err := h.netnsService.RestoreNamespaces(); err != nil {
+		restoreErrors = append(restoreErrors, "netns: "+err.Error())
+	}
+
 	if err := h.ipsetService.RestoreSets(); err != nil {
 		restoreErrors = append(restoreErrors, "ipset: "+err.Error())
 	}
@@ -286,6 +296,10 @@ func (h *SettingsHandler) ImportConfig(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.tunnelService.RestoreTunnels(); err != nil {
 		restoreErrors = append(restoreErrors, "tunnels: "+err.Error())
+	}
+
+	if err := h.dnsmasqService.RestoreConfig(); err != nil {
+		restoreErrors = append(restoreErrors, "dnsmasq: "+err.Error())
 	}
 
 	h.userService.LogAction(&user.ID, "config_import", "", getClientIP(r))
@@ -325,6 +339,14 @@ func (h *SettingsHandler) SaveAll(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.tunnelService.SaveTunnels(); err != nil {
 		errors = append(errors, "tunnels: "+err.Error())
+	}
+
+	if err := h.netnsService.SaveNamespaces(); err != nil {
+		errors = append(errors, "netns: "+err.Error())
+	}
+
+	if err := h.dnsmasqService.SaveConfig(); err != nil {
+		errors = append(errors, "dnsmasq: "+err.Error())
 	}
 
 	if len(errors) > 0 {
