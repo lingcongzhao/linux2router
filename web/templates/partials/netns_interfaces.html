@@ -1,4 +1,5 @@
 {{define "netns_interfaces"}}
+<div class="table-container" style="overflow-x: auto;">
 {{if .Interfaces}}
 <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
@@ -76,4 +77,5 @@
     No interfaces in this namespace. Click "Add Interface" to move one from the default namespace.
 </div>
 {{end}}
+</div>
 {{end}}
