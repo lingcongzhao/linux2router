@@ -285,6 +285,8 @@ if [ -f "$CONFIG_DIR/netns/namespaces.conf" ]; then
 
         # Restore per-namespace IP rules
         if [ -f "$CONFIG_DIR/netns/$ns/rules.conf" ]; then
+            # Flush existing rules in namespace before restoring to avoid duplicates
+            ip netns exec "$ns" ip rule flush 2>/dev/null || true
             while IFS= read -r rule; do
                 [ -z "$rule" ] && continue
                 [[ "$rule" =~ ^# ]] && continue
@@ -340,6 +342,12 @@ done
 # Restore IP rules
 if [ -f "$CONFIG_DIR/rules/ip-rules.conf" ]; then
     echo "Restoring IP rules..."
+    # Flush existing rules before restoring to avoid duplicates
+    ip rule flush 2>/dev/null || true
+    # Re-add default rules (these are required for basic routing)
+    ip rule add lookup local 2>/dev/null || true
+    ip rule add lookup main 2>/dev/null || true
+    ip rule add lookup default 2>/dev/null || true
     while IFS= read -r line; do
         [ -z "$line" ] && continue
         [[ "$line" =~ ^# ]] && continue
