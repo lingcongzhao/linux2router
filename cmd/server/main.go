@@ -140,6 +140,11 @@ func main() {
 	staticDir := filepath.Join(webDir, "static")
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	// Favicon
+	r.Get("/favicon.svg", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "ico", "favicon.svg"))
+	})
+
 	// Public routes
 	r.Get("/login", authHandler.LoginPage)
 	r.Post("/login", authHandler.Login)
