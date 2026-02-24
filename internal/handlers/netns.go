@@ -78,6 +78,20 @@ func (h *NetnsHandler) GetNamespaces(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetNamespaceOptions returns the namespace options for dropdown
+func (h *NetnsHandler) GetNamespaceOptions(w http.ResponseWriter, r *http.Request) {
+	namespaces, err := h.netnsService.ListNamespaces()
+	if err != nil {
+		log.Printf("Failed to list namespaces: %v", err)
+		namespaces = []models.NetworkNamespace{}
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	for _, ns := range namespaces {
+		fmt.Fprintf(w, `<option value="%s">%s</option>`, ns.Name, ns.Name)
+	}
+}
+
 // ViewNamespace renders the namespace detail page
 func (h *NetnsHandler) ViewNamespace(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)

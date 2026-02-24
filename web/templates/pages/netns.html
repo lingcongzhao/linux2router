@@ -54,7 +54,7 @@
                 </svg>
             </button>
         </div>
-        <form hx-post="/netns" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) document.getElementById('addModal').classList.add('hidden')">
+        <form hx-post="/netns" hx-target="#alert-container" hx-on::after-request="if(event.detail.successful) { document.getElementById('addModal').classList.add('hidden'); refreshNamespaceDropdown(); }">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Namespace Name</label>
@@ -167,6 +167,18 @@ function executeModalAction() {
     
     document.getElementById('confirmModal').classList.add('hidden');
     modalActionUrl = null;
+}
+
+function refreshNamespaceDropdown() {
+    fetch('/netns/options')
+        .then(function(response) { return response.text(); })
+        .then(function(html) {
+            var select = document.querySelector('#vethModal select[name="namespace"]');
+            if (select) {
+                select.innerHTML = html;
+            }
+        })
+        .catch(function(err) { console.error('Failed to refresh namespace dropdown:', err); });
 }
 </script>
 {{end}}

@@ -255,6 +255,7 @@ func main() {
 		// Network Namespaces
 		r.Get("/netns", netnsHandler.List)
 		r.Get("/netns/list", netnsHandler.GetNamespaces)
+		r.Get("/netns/options", netnsHandler.GetNamespaceOptions)
 		r.Post("/netns", netnsHandler.CreateNamespace)
 		r.Post("/netns/veth", netnsHandler.CreateVethPair)
 		r.Post("/netns/save", netnsHandler.SaveNamespaces)
