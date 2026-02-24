@@ -25,6 +25,11 @@
         </main>
     </div>
     <script>
+    var serviceIntervals = {
+        dns: null,
+        dhcp: null
+    };
+
     function updateServiceControls(service) {
         Promise.all([
             fetch('/' + service + '/controls').then(r => r.text()),
@@ -43,15 +48,42 @@
             }
         }).catch(err => console.error('Error updating ' + service + ' controls:', err));
     }
-    
-    // Start polling after a short delay to ensure page is loaded
-    setTimeout(function() {
-        updateServiceControls('dns');
-        updateServiceControls('dhcp');
+
+    function startPolling(service) {
+        if (serviceIntervals[service]) return;
+        updateServiceControls(service);
+        serviceIntervals[service] = setInterval(function() { updateServiceControls(service); }, 5000);
+    }
+
+    function stopPolling(service) {
+        if (serviceIntervals[service]) {
+            clearInterval(serviceIntervals[service]);
+            serviceIntervals[service] = null;
+        }
+    }
+
+    function manageServicePolling() {
+        const path = window.location.pathname;
         
-        setInterval(function() { updateServiceControls('dns'); }, 5000);
-        setInterval(function() { updateServiceControls('dhcp'); }, 5000);
+        if (path.startsWith('/dns')) {
+            startPolling('dns');
+            stopPolling('dhcp');
+        } else if (path.startsWith('/dhcp')) {
+            startPolling('dhcp');
+            stopPolling('dns');
+        } else {
+            stopPolling('dns');
+            stopPolling('dhcp');
+        }
+    }
+
+    setTimeout(function() {
+        manageServicePolling();
     }, 500);
+
+    document.body.addEventListener('htmx:afterSwap', function() {
+        manageServicePolling();
+    });
     </script>
 </body>
 </html>
