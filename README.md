@@ -86,6 +86,26 @@ A comprehensive web-based GUI application for managing Linux networking on Ubunt
 - Root privileges (required for network operations)
 - CGO enabled
 
+## Quick Start
+
+```bash
+# Install dependencies
+sudo apt install -y ipset wireguard-tools dnsmasq
+
+# Clone the repository
+git clone https://github.com/lingcongzhao/linux2router.git
+cd linux2router/build/
+
+# Clean up default configs and data (optional)
+rm -rf ./configs/
+rm -rf ./data/
+
+# Run the application
+sudo ./router-gui
+```
+
+Then open http://localhost:8090 in your browser and login with admin/admin.
+
 ## Installation
 
 ### Build from Source
